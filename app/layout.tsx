@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Sage Healthy RCM Admin Portal",
+  title: "MySage - InputHub",
   description: "Client Database Web Application for Sage Healthy",
   icons: {
     icon: "/images/sage_healthy_rcm_logo.png",

@@ -1,124 +1,99 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-// import { supabase } from "@/lib/supabaseClient"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { MoreHorizontal, Search, ChevronDown, FileEdit, Trash2, Eye } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, ChevronDown } from "lucide-react";
 
-// Sanitize function to handle missing or default values (N/A)
+// ✅ Safe text helpers
 const sanitizeValue = (value: unknown): string => {
-  if (value === null || value === undefined || value === "N/A" || value === "") {
-    return " ";  // You can return an empty string or another default value
-  }
-  return String(value); // Convert any value to string
-}
-
-// Put this directly below sanitizeValue
-const getDBAText = (value: unknown): string => {
-  if (value === null || value === undefined) return "N/A";
-  const s = String(value).trim();
-  return s === "" ? "N/A" : s;
+  if (value === null || value === undefined || value === "" || value === "N/A")
+    return "-";
+  return String(value);
 };
 
 const formatPrimaryContact = (
-  first?: string,
-  last?: string,
-  title?: string
+  name?: string,
+  phone?: string,
+  email?: string
 ): string => {
-  const parts: string[] = [];
-
-  if (first && first.trim() && first !== "N/A") parts.push(first.trim());
-  if (last && last.trim() && last !== "N/A") parts.push(last.trim());
-
-  let name = parts.join(" ");
-  if (title && title.trim() && title !== "N/A") {
-    // add comma only if there's a name first
-    name = name ? `${name}, ${title.trim()}` : title.trim();
-  }
-
-  return name;
+  const parts = [];
+  if (name) parts.push(name);
+  if (phone) parts.push(phone);
+  if (email) parts.push(email);
+  return parts.length ? parts.join(" | ") : "-";
 };
 
-
-
-// Fetch recent clients from Supabase (last 5)
-const fetchRecentClients = async () => {
+// ✅ Fetch recent companies from API
+const fetchRecentCompanies = async () => {
   try {
-    const response = await fetch("/api/dashboard/recent-clients");
-    if (!response.ok) throw new Error("Failed to fetch");
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching recent clients:", error);
+    const res = await fetch("/api/dashboard/recent-companies");
+    if (!res.ok) throw new Error("Failed to fetch");
+    const data = await res.json();
+    return data?.companies || [];
+  } catch (err) {
+    console.error("Error fetching recent companies:", err);
     return [];
   }
 };
 
+export function DashboardRecentCompanies() {
+  const router = useRouter();
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-export function DashboardTable() {
-  const router = useRouter()
-  const [clients, setClients] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-
-  // Fetch recent clients on page load
+  // Load data
   useEffect(() => {
-    const loadClients = async () => {
-      const recentClients = await fetchRecentClients()
-      setClients(recentClients)
-    }
-    loadClients()
-  }, [])
+    const load = async () => {
+      const data = await fetchRecentCompanies();
+      setCompanies(data);
+    };
+    load();
+  }, []);
 
-  // Filter clients based on the search term
-  const filteredClients = clients.filter((client) => {
-  const search = searchTerm.toLowerCase();
+  // Search filter
+  const filteredCompanies = companies.filter((c) => {
+    const s = searchTerm.toLowerCase();
+    return (
+      sanitizeValue(c.account_name).toLowerCase().includes(s) ||
+      sanitizeValue(c.website_city).toLowerCase().includes(s) ||
+      sanitizeValue(c.website_state).toLowerCase().includes(s) ||
+      sanitizeValue(c.website).toLowerCase().includes(s)
+    );
+  });
 
-  return (
-    sanitizeValue(client.practice_name).toLowerCase().includes(search) ||
-    getDBAText(client.dba).toLowerCase().includes(search) ||
-    // sanitizeValue(client.primary_contact_first_name).toLowerCase().includes(search) ||
-    // sanitizeValue(client.primary_contact_last_name).toLowerCase().includes(search) ||
-    // sanitizeValue(client.primary_contact_title).toLowerCase().includes(search) ||
-    formatPrimaryContact(
-  client.primary_contact_first_name,
-  client.primary_contact_last_name,
-  client.primary_contact_title
-).toLowerCase().includes(search) ||
-    sanitizeValue(client.email).toLowerCase().includes(search) ||
-    sanitizeValue(client.state).toLowerCase().includes(search) ||
-    sanitizeValue(client.UniqueID).toLowerCase().includes(search) ||
-    sanitizeValue(client.client_id).toLowerCase().includes(search)
-  );
-});
+  const handleRowClick = (id: string) => {
+    router.push(`/companies/${id}`);
+  };
 
-  
-  const handleRowClick = (clientId: string) => {
-      router.push(`/clients/${clientId}`)
-  }
-  // Handle clicking "View All" button to navigate to clients page
   const handleViewAll = () => {
-    router.push("/clients")  // Adjust URL for your clients page
-  }
-
+    router.push("/companies");
+  };
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search clients..."
+            placeholder="Search companies..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
         <Button
           onClick={handleViewAll}
           className="bg-[#112B74] hover:bg-[#0E2463] text-white text-sm font-semibold px-4 py-2 rounded-md shadow-sm transition-all duration-200 flex items-center"
@@ -128,106 +103,82 @@ export function DashboardTable() {
         </Button>
       </div>
 
+      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Practice Name</TableHead>
-              <TableHead>DBA</TableHead>
-              <TableHead className="hidden md:table-cell">Primary Contact</TableHead>
-              {/* <TableHead className="hidden md:table-cell">Email</TableHead> */}
-              <TableHead className="hidden md:table-cell">State</TableHead>
+              <TableHead>Company Name</TableHead>
+              <TableHead>Website</TableHead>
+              <TableHead className="hidden md:table-cell">Location</TableHead>
+              <TableHead className="hidden md:table-cell">Founded</TableHead>
               <TableHead>Status</TableHead>
-              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
-          {/* <TableBody>
-            {filteredClients.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.client_id}</TableCell>
-                <TableCell>{client.practice_name}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {`${sanitizeValue(client.primary_contact_first_name)} ${sanitizeValue(client.primary_contact_last_name)}, ${sanitizeValue(client.primary_contact_title)}`}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{sanitizeValue(client.email)}</TableCell>
-                <TableCell className="hidden md:table-cell">{sanitizeValue(client.state)}</TableCell>
-                <TableCell>
-                  <Badge variant={client.client_status === "active" ? "default" : "secondary"}>
-                    {client.client_status === "active" ? "Active" : "Inactive"}
-                  </Badge>
-                </TableCell> */}
-                {/* <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => router.push(`/clients/${client.id}`)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push(`/clients/${client.id}/edit`)}>
-                        <FileEdit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600" onClick={() => alert("Archive client")}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Archive
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell> */}
-              {/* </TableRow>
-            ))}
-          </TableBody> */}
+
           <TableBody>
-  {filteredClients.map((client) => (
-    <TableRow
-      key={client.client_id}
-      className="cursor-pointer hover:bg-gray-50"
-     onClick={(e) => {
-                        // Prevent navigation if user is selecting text
-                        const selection = window.getSelection();
-                        if (!selection || selection.toString().length === 0) {
-                          handleRowClick(client.client_id);
-                        }
-                      }}
-    >
-      <TableCell className="font-medium">{sanitizeValue(client.UniqueID)}</TableCell>
-      <TableCell>{sanitizeValue(client.practice_name)}</TableCell>
-      <TableCell>{getDBAText(client.dba)}</TableCell>
-      {/* <TableCell className="hidden md:table-cell">
-        {`${sanitizeValue(client.primary_contact_first_name)} ${sanitizeValue(client.primary_contact_last_name)}, ${sanitizeValue(client.primary_contact_title)}`}
-      </TableCell> */}
-      <TableCell className="hidden md:table-cell">
-  {formatPrimaryContact(
-    client.primary_contact_first_name,
-    client.primary_contact_last_name,
-    client.primary_contact_title
-  )}
-</TableCell>
-
-
-      {/* <TableCell className="hidden md:table-cell">{sanitizeValue(client.email)}</TableCell> */}
-      <TableCell className="hidden md:table-cell">{sanitizeValue(client.state)}</TableCell>
-      <TableCell>
-        <Badge variant={client.client_status === "active" ? "default" : "destructive"}>
-  {sanitizeValue(client.client_status)}
-</Badge>
-
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-
+            {filteredCompanies.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-6 text-gray-500"
+                >
+                  No recent companies found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCompanies.map((company) => (
+                <TableRow
+                  key={company.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={(e) => {
+                    const selection = window.getSelection();
+                    if (!selection || selection.toString().length === 0)
+                      handleRowClick(company.id);
+                  }}
+                >
+                  <TableCell className="font-medium">
+                    {sanitizeValue(company.id)}
+                  </TableCell>
+                  <TableCell className="font-semibold text-gray-800">
+                    {sanitizeValue(company.account_name)}
+                  </TableCell>
+                  <TableCell className="text-blue-600 underline truncate max-w-[200px]">
+                    <a
+                      href={company.website}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {sanitizeValue(company.website)}
+                    </a>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {`${sanitizeValue(company.website_city)}, ${sanitizeValue(
+                      company.website_state
+                    )}`}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {sanitizeValue(company.website_year_founded || "-")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        company.status?.toLowerCase() === "active"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {sanitizeValue(company.status || "Active")}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
         </Table>
       </div>
     </div>
-  )
+  );
 }
