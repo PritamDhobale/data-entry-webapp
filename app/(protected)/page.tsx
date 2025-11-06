@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardChart } from "@/components/dashboard-chart";
-// import { DashboardTable } from "@/components/dashboard-table";
+import { DashboardTable } from "@/components/dashboard-table";
 
 type DashboardSummary = {
   success: boolean;
@@ -225,7 +225,7 @@ export default function Dashboard() {
           <CardTitle className="text-[#000000]">Recent Companies</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* <DashboardTable /> */}
+          <DashboardTable />
         </CardContent>
       </Card>
     </div>

@@ -15,23 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronDown } from "lucide-react";
 
-// ✅ Safe text helpers
+// ✅ Safe text helper
 const sanitizeValue = (value: unknown): string => {
   if (value === null || value === undefined || value === "" || value === "N/A")
     return "-";
   return String(value);
-};
-
-const formatPrimaryContact = (
-  name?: string,
-  phone?: string,
-  email?: string
-): string => {
-  const parts = [];
-  if (name) parts.push(name);
-  if (phone) parts.push(phone);
-  if (email) parts.push(email);
-  return parts.length ? parts.join(" | ") : "-";
 };
 
 // ✅ Fetch recent companies from API
@@ -47,7 +35,7 @@ const fetchRecentCompanies = async () => {
   }
 };
 
-export function DashboardRecentCompanies() {
+export function DashboardTable() {
   const router = useRouter();
   const [companies, setCompanies] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,10 +53,10 @@ export function DashboardRecentCompanies() {
   const filteredCompanies = companies.filter((c) => {
     const s = searchTerm.toLowerCase();
     return (
-      sanitizeValue(c.account_name).toLowerCase().includes(s) ||
-      sanitizeValue(c.website_city).toLowerCase().includes(s) ||
-      sanitizeValue(c.website_state).toLowerCase().includes(s) ||
-      sanitizeValue(c.website).toLowerCase().includes(s)
+      sanitizeValue(c.name).toLowerCase().includes(s) ||
+      sanitizeValue(c.city).toLowerCase().includes(s) ||
+      sanitizeValue(c.state).toLowerCase().includes(s) ||
+      sanitizeValue(c.industry).toLowerCase().includes(s)
     );
   });
 
@@ -110,9 +98,9 @@ export function DashboardRecentCompanies() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Company Name</TableHead>
-              <TableHead>Website</TableHead>
+              <TableHead>Industry</TableHead>
               <TableHead className="hidden md:table-cell">Location</TableHead>
-              <TableHead className="hidden md:table-cell">Founded</TableHead>
+              <TableHead className="hidden md:table-cell">Last Updated</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -142,36 +130,23 @@ export function DashboardRecentCompanies() {
                     {sanitizeValue(company.id)}
                   </TableCell>
                   <TableCell className="font-semibold text-gray-800">
-                    {sanitizeValue(company.account_name)}
+                    {sanitizeValue(company.name)}
                   </TableCell>
-                  <TableCell className="text-blue-600 underline truncate max-w-[200px]">
-                    <a
-                      href={company.website}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {sanitizeValue(company.website)}
-                    </a>
+                  <TableCell>
+                    {sanitizeValue(company.industry)}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {`${sanitizeValue(company.website_city)}, ${sanitizeValue(
-                      company.website_state
+                    {`${sanitizeValue(company.city)}, ${sanitizeValue(
+                      company.state
                     )}`}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {sanitizeValue(company.website_year_founded || "-")}
+                    {company.lastUpdated
+                      ? new Date(company.lastUpdated).toLocaleDateString()
+                      : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        company.status?.toLowerCase() === "active"
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {sanitizeValue(company.status || "Active")}
-                    </Badge>
+                    <Badge variant="default">Active</Badge>
                   </TableCell>
                 </TableRow>
               ))

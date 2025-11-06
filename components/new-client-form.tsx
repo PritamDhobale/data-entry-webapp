@@ -44,6 +44,7 @@ const TAB_ORDER = [
   { id: "sos", title: "SoS" },
   { id: "source_info", title: "Source Info" },
   { id: "documents", title: "Documents" },
+  { id: "metadata", title: "Metadata" },
 ] as const;
 
 /**
@@ -55,7 +56,7 @@ const FIELDS_BY_SECTION: Record<
   (typeof TAB_ORDER)[number]["id"],
   { label: string; name: string }[]
 > = {
-  /* ---------------------- DETAILS (WEBSITE/ACCOUNT) --------------------- */
+    /* ---------------------- DETAILS (WEBSITE / ACCOUNT) ---------------------- */
   details: [
     { label: "Account Name", name: "account_name" },
     { label: "Website", name: "website" },
@@ -72,22 +73,45 @@ const FIELDS_BY_SECTION: Record<
     { label: "Website: Region", name: "website_region" },
     { label: "Website Office Phone", name: "website_office_phone" },
     { label: "Website Contacts", name: "website_contacts" },
-    { label: "Website Locations (#)", name: "website_locations_num" },
+    { label: "Website Locations", name: "website_locations" },
     { label: "Website Year Founded", name: "website_year_founded" },
     { label: "Website Employees", name: "website_employees" },
     { label: "Website Designations", name: "website_designations" },
     { label: "Website: Could Not Access", name: "website_could_not_access" },
-    { label: "Website: Notes", name: "website_notes" },
+    { label: "Website Notes", name: "website_notes" },
   ],
 
   /* ------------------------------ LINKEDIN ------------------------------ */
+    /* ------------------------------ LINKEDIN ------------------------------ */
   linkedin: [
-    { label: "Account Name", name: "account_name_2" },
-    { label: "Website", name: "website_2" },
-    { label: "Possible LinkedIn (#1)(Grata)", name: "possible_linkedinnum1_grata" },
-    { label: "Possible LinkedIn (#2)(Zoominfo)", name: "possible_linkedinnum2_zoominfo" },
-    { label: "LinkedIn (Url)", name: "linkedin_url" },
-    { label: "LinkedIn: Could Not Access", name: "linkedin_could_not_access" },
+    { label: "Website Notes", name: "website_notes" },
+    { label: "LinkedIn Possible #1", name: "linkedin_possible_1" },
+    { label: "LinkedIn Possible #2", name: "linkedin_possible_2" },
+    { label: "LinkedIn URL", name: "linkedin_url" },
+    { label: "LinkedIn Company Name", name: "linkedin_company_name" },
+    { label: "LinkedIn Overview", name: "linkedin_overview" },
+    { label: "LinkedIn Followers", name: "linkedin_followers" },
+    { label: "LinkedIn Phone", name: "linkedin_phone" },
+    { label: "LinkedIn Industry", name: "linkedin_industry" },
+    { label: "LinkedIn Employee Estimate", name: "linkedin_employee_estimate" },
+    { label: "LinkedIn Members", name: "linkedin_members" },
+    { label: "LinkedIn Headquarters", name: "linkedin_headquarters" },
+    { label: "LinkedIn Founded Year", name: "linkedin_founded_year" },
+    { label: "LinkedIn Specialties", name: "linkedin_specialties" },
+    { label: "LinkedIn Contacts", name: "linkedin_contacts" },
+    { label: "LinkedIn Locations", name: "linkedin_locations" },
+    { label: "LinkedIn Primary Location", name: "linkedin_primary_location" },
+    { label: "LinkedIn Street", name: "linkedin_street" },
+    { label: "LinkedIn City", name: "linkedin_city" },
+    { label: "LinkedIn State", name: "linkedin_state" },
+    { label: "LinkedIn Zip Code", name: "linkedin_zip_code" },
+    { label: "LinkedIn Country", name: "linkedin_country" },
+    { label: "LinkedIn Full Company MSA", name: "linkedin_full_company_msa" },
+    { label: "LinkedIn Company MSA", name: "linkedin_company_msa" },
+    { label: "LinkedIn Region", name: "linkedin_region" },
+    { label: "LinkedIn Notes", name: "linkedin_notes" },
+    { label: "LinkedIn Unclaimed Page", name: "linkedin_unclaimed_page" },
+    { label: "LinkedIn Could Not Access", name: "linkedin_could_not_access" },
   ],
 
   /* --------------------------------- BBB -------------------------------- */
@@ -99,21 +123,19 @@ const FIELDS_BY_SECTION: Record<
   /* --------------------------- GOOGLE BUSINESS -------------------------- */
   google_business: [
     { label: "Google Business Page (Url)", name: "google_business_page_url" },
-    { label: "Google Business: Could Not Access", name: "google_business_could_not_access" },
+    { label: "Google Business: Could Not Access", name: "google_could_not_access" },
   ],
 
   /* -------------------------------- PPP --------------------------------- */
   ppp: [
-    { label: "Account Name", name: "account_name_3" },
-    { label: "Website", name: "website_3" },
-    { label: "FederalPay PPP Link (Url)", name: "federalpay_ppp_link_url" },
+    { label: "FederalPay PPP Link (Url)", name: "federalpay_ppp_url" },
     { label: "PPP Company Name", name: "ppp_company_name" },
     { label: "PPP Jobs Retained", name: "ppp_jobs_retained" },
     { label: "PPP Total Loan Size", name: "ppp_total_loan_size" },
-    { label: "PPP Loan Size(#1)", name: "ppp_loan_sizenum1" },
-    { label: "PPP Loan Payroll Amount (#1)", name: "ppp_loan_payroll_amount_num1" },
-    { label: "PPP Loan Size (#2)", name: "ppp_loan_size_num2" },
-    { label: "PPP Loan Payroll Amount (#2)", name: "ppp_loan_payroll_amount_num2" },
+    { label: "PPP Loan Size (#1)", name: "ppp_loan_size_1" },
+    { label: "PPP Loan Payroll Amount (#1)", name: "ppp_loan_payroll_amount_1" },
+    { label: "PPP Loan Size (#2)", name: "ppp_loan_size_2" },
+    { label: "PPP Loan Payroll Amount (#2)", name: "ppp_loan_payroll_amount_2" },
     { label: "PPP Address", name: "ppp_address" },
     { label: "PPP Street", name: "ppp_street" },
     { label: "PPP City", name: "ppp_city" },
@@ -121,25 +143,43 @@ const FIELDS_BY_SECTION: Record<
     { label: "PPP Zip Code", name: "ppp_zip_code" },
     { label: "PPP Country", name: "ppp_country" },
     { label: "PPP: Full Company MSA", name: "ppp_full_company_msa" },
+    { label: "PPP Company MSA", name: "ppp_company_msa" },
+    { label: "PPP Region", name: "ppp_region" },
+    { label: "PPP Business Demographics", name: "ppp_business_demographics" },
+    { label: "PPP NAICS Code", name: "ppp_naics_code" },
+    { label: "PPP Business Owner Demographics", name: "ppp_business_owner_demographics" },
+    { label: "PPP Notes", name: "ppp_notes" },
+    { label: "PPP Could Not Access", name: "ppp_could_not_access" },
   ],
 
   /* --------------------------------- SoS -------------------------------- */
   sos: [
-    { label: "Secretary of State: Company Name", name: "secretary_of_state_company_name" },
-    { label: "Secretary of State: Could Not Access", name: "secretary_of_state_could_not_access" },
+    { label: "Secretary of State: Company Name", name: "sos_company_name" },
+    { label: "Secretary of State: Could Not Access", name: "sos_could_not_access" },
   ],
 
   /* ------------------------------ SOURCE INFO --------------------------- */
   source_info: [
-    { label: "Source", name: "source" },
+    // { label: "Source", name: "source" },
     { label: "Location (Primary)", name: "location_primary" },
-    { label: "Location (Primary) Source", name: "location_primary_source" },
-    { label: "Location (#2)", name: "location_num2" },
-    { label: "Location (#2) Source", name: "location_num2_source" },
-    { label: "Location (#3)", name: "location_num3" },
-    { label: "Location (#3) Source", name: "location_num3_source" },
-    { label: "Location (#4)", name: "location_num4" },
-    { label: "Location (#4) Source", name: "location_num4_source" },
+    { label: "Location (Primary) Source", name: "source_primary" },
+    { label: "Location (#2)", name: "location_secondary" },
+    { label: "Location (#2) Source", name: "source_secondary" },
+    { label: "Location (#3)", name: "location_tertiary" },
+    { label: "Location (#3) Source", name: "source_tertiary" },
+    { label: "Location (#4)", name: "location_fourth" },
+    { label: "Location (#4) Source", name: "source_fourth" },
+  ],
+
+  /* ------------------------------ METADATA ------------------------------ */
+  metadata: [
+    { label: "Created At", name: "created_at" },
+    // { label: "Modified At", name: "modified_at" },
+    // { label: "Data Source", name: "data_source" },
+    // { label: "Record Owner", name: "record_owner" },
+    // { label: "Import Batch", name: "import_batch" },
+    // { label: "Upload Timestamp", name: "upload_timestamp" },
+    // { label: "General Notes", name: "general_notes" },
   ],
 
   /* ------------------------------- DOCUMENTS ---------------------------- */
@@ -252,18 +292,60 @@ export function NewClientForm() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      // Minimal required check (only what is present in lite form)
+      // ✅ Basic validation
       if (!form.account_name && !form.website_company_name) {
         alert("Please provide at least Account Name or Website Company Name");
         setSaving(false);
         return;
       }
 
+      // ✅ Define boolean columns exactly as in Supabase schema
+      const booleanFields = [
+        "website_could_not_access",
+        "linkedin_could_not_access",
+        "bbb_could_not_access",
+        "google_could_not_access",
+        "ppp_could_not_access",
+        "sos_could_not_access",
+      ];
+
+      // ✅ Normalize data before sending to API
+      const normalizedPayload = Object.fromEntries(
+        Object.entries(form).map(([key, value]) => {
+          const trimmed = typeof value === "string" ? value.trim() : value;
+
+          // Handle booleans
+          if (booleanFields.includes(key)) {
+            if (trimmed === "true" || trimmed === "1" || trimmed.toLowerCase() === "yes") return [key, true];
+            if (trimmed === "false" || trimmed === "0" || trimmed.toLowerCase() === "no") return [key, false];
+            return [key, null];
+          }
+
+          // Handle numbers (loan sizes, employees, etc.)
+          if (
+            key.endsWith("_num") ||
+            key.includes("loan") ||
+            key.includes("employees") ||
+            key.includes("year_founded") ||
+            key.includes("zip_code") ||
+            key.includes("jobs_retained")
+          ) {
+            const num = parseFloat(trimmed);
+            return [key, isNaN(num) ? null : num];
+          }
+
+          // Default string → null if empty
+          return [key, trimmed === "" ? null : trimmed];
+        })
+      );
+
+      // ✅ Add created timestamp
       const payload = {
-        ...form,
+        ...normalizedPayload,
         created_at: new Date().toISOString(),
       };
 
+      // ✅ API request
       const res = await fetch("/api/clients/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -277,7 +359,7 @@ export function NewClientForm() {
 
       const { client_id } = await res.json();
 
-      // Optional doc uploads (kept generic; aligns with your upload route)
+      // ✅ Optional document uploads
       if (client_id && documents.length) {
         for (const file of documents) {
           const fd = new FormData();
@@ -287,7 +369,7 @@ export function NewClientForm() {
         }
       }
 
-      // Reset and close
+      // ✅ Reset form + close modal
       setForm(initial);
       setDocuments([]);
       setOpen(false);
@@ -298,6 +380,7 @@ export function NewClientForm() {
       setSaving(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

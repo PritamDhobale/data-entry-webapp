@@ -113,10 +113,13 @@ export function ClientsTable() {
                   <TableCell>{client.linkedin_company_name || "N/A"}</TableCell>
                   <TableCell>{client.google_rating || "N/A"}</TableCell>
                   <TableCell>
+                    <Badge variant="default">Active</Badge>
+                  </TableCell>
+                  {/* <TableCell>
                     <Badge variant={client.status === "active" ? "default" : "secondary"}>
                       {client.status || "active"}
                     </Badge>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       <Button size="icon" variant="outline" onClick={() => router.push(`/clients/${client.id}`)}>
