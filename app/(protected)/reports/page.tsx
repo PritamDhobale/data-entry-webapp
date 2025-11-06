@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function ReportsPage() {
-  useAuthGuard(); // ✅ now works correctly because component is client-side
+  // useAuthGuard(); // ✅ now works correctly because component is client-side
 
   return (
     <div className="space-y-6">
