@@ -138,7 +138,7 @@ export function FileViewerDialog({ clientId, clientName, trigger }: FileViewerDi
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Client Files</DialogTitle>
+          <DialogTitle>Company Files</DialogTitle>
           <DialogDescription>Uploaded files for {clientName}</DialogDescription>
         </DialogHeader>
 

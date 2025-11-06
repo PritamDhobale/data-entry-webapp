@@ -142,7 +142,7 @@ export function FileUploadDialog({ clientId, clientName, trigger, onUploadComple
         <DialogHeader>
           <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
-            Upload documents for {clientName} (Client ID: {clientId})
+            Upload documents for {clientName} (Company ID: {clientId})
           </DialogDescription>
         </DialogHeader>
 

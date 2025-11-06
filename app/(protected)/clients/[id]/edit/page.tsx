@@ -181,7 +181,7 @@ export default function EditClientPage() {
         setData(data);
       } catch (e) {
         console.error(e);
-        alert("Failed to load client.");
+        alert("Failed to load Company.");
         router.push("/clients");
       } finally {
         setLoading(false);
@@ -190,7 +190,7 @@ export default function EditClientPage() {
   }, [rowId, router]);
 
   const title = useMemo(() => {
-    return data?.practice_name ? `Edit: ${data.practice_name}` : "Edit Client";
+    return data?.practice_name ? `Edit: ${data.practice_name}` : "Edit Company";
   }, [data?.practice_name]);
 
   const onChangeField = (key: keyof CompanyData, value: string) => {
@@ -258,10 +258,10 @@ export default function EditClientPage() {
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle>Client not found</CardTitle>
+            <CardTitle>Company not found</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push("/clients")}>Go to Clients</Button>
+            <Button onClick={() => router.push("/clients")}>Go to Companies</Button>
           </CardContent>
         </Card>
       </div>

@@ -294,7 +294,7 @@ export function NewClientForm() {
     try {
       // ✅ Basic validation
       if (!form.account_name && !form.website_company_name) {
-        alert("Please provide at least Account Name or Website Company Name");
+        alert("Please provide at least Account Name or Website Contact Name");
         setSaving(false);
         return;
       }
@@ -354,7 +354,7 @@ export function NewClientForm() {
 
       if (!res.ok) {
         const msg = await res.text();
-        throw new Error(msg || "Failed to add client");
+        throw new Error(msg || "Failed to add company");
       }
 
       const { client_id } = await res.json();
@@ -374,8 +374,8 @@ export function NewClientForm() {
       setDocuments([]);
       setOpen(false);
     } catch (err: any) {
-      console.error("Create client failed:", err?.message || err);
-      alert(err?.message || "Create client failed");
+      console.error("Create company failed:", err?.message || err);
+      alert(err?.message || "Create company failed");
     } finally {
       setSaving(false);
     }
@@ -392,13 +392,13 @@ export function NewClientForm() {
           onMouseLeave={(e) => ((e.currentTarget.style.backgroundColor = BRAND.primary))}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
-          New Client
+          New Company
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-5xl h-[85vh] overflow-y-auto flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
+          <DialogTitle>Add New Company</DialogTitle>
           <DialogDescription>
             Fill in the fields below. You can also download a CSV template or upload one to auto-fill.
           </DialogDescription>
@@ -510,7 +510,7 @@ export function NewClientForm() {
             onMouseEnter={(e) => ((e.currentTarget.style.backgroundColor = BRAND.primaryHover))}
             onMouseLeave={(e) => ((e.currentTarget.style.backgroundColor = BRAND.primary))}
           >
-            {saving ? "Creating..." : "Create Client"}
+            {saving ? "Creating..." : "Create Company"}
           </Button>
         </DialogFooter>
       </DialogContent>

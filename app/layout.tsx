@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "MySage - InputHub",
-  description: "Client Database Web Application for Sage Healthy",
+  description: "Company Data Entry Web Application for Sage Healthy",
   icons: {
     icon: "/images/p.png",
   },

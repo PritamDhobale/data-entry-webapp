@@ -64,7 +64,7 @@ export function ClientsTable() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search contacts..."
+            placeholder="Search Companies..."
             className="pl-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -95,7 +95,7 @@ export function ClientsTable() {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-6 text-gray-500">
-                  {loading ? "Loading..." : "No clients found"}
+                  {loading ? "Loading..." : "No Company Found"}
                 </TableCell>
               </TableRow>
             ) : (

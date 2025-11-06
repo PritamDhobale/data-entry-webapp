@@ -570,7 +570,7 @@ export default function CompanyDetailPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading company details…</p>
+          <p className="mt-4 text-gray-500">Loading Company details…</p>
         </div>
       </div>
     );
@@ -587,7 +587,7 @@ export default function CompanyDetailPage() {
           <h1 className="text-2xl font-bold">Company Not Found</h1>
         </div>
         <p>The record you are looking for does not exist or has been removed.</p>
-        <Button onClick={() => router.push("/clients")}>Return to Clients</Button>
+        <Button onClick={() => router.push("/clients")}>Return to Companies</Button>
       </div>
     );
   }

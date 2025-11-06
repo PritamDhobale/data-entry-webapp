@@ -19,7 +19,7 @@ import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Contacts", href: "/clients", icon: Users },
+  { name: "Companies", href: "/clients", icon: Users },
   { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
