@@ -396,7 +396,7 @@ export function NewClientForm() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl h-[85vh] overflow-y-auto flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
           <DialogDescription>
@@ -435,7 +435,11 @@ export function NewClientForm() {
         <Separator />
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="mt-4 flex-1 overflow-y-auto"
+        >
           <TabsList className="w-full justify-start overflow-x-auto">
             {TAB_ORDER.map((t) => (
               <TabsTrigger key={t.id} value={t.id} className="whitespace-nowrap">

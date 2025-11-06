@@ -64,7 +64,7 @@ export function ClientsTable() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search clients..."
+            placeholder="Search contacts..."
             className="pl-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
