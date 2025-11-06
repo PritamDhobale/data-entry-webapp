@@ -24,35 +24,35 @@ const COLORS = ["#C9E4A4", "#FAC086", "#DAAAE4", "#A7DCF7", "#FFD38D", "#B6E3FF"
 export function DashboardChart() {
   const [chartData, setChartData] = useState<any[]>([])
 
-  useEffect(() => {
-    const fetchOwnerCodeData = async () => {
-      try {
-        const res = await fetch("/api/dashboard/owner-codes")
-        const json = await res.json()
-        if (!json.success) throw new Error(json.error || "Failed to load owner codes")
+  // useEffect(() => {
+  //   const fetchOwnerCodeData = async () => {
+  //     try {
+  //       const res = await fetch("/api/dashboard/owner-codes")
+  //       const json = await res.json()
+  //       if (!json.success) throw new Error(json.error || "Failed to load owner codes")
 
-        const data = json.data.map((item: any) => ({
-          code: (item.owner_code ?? "").toString().toUpperCase(),
-          name: codeToLabel(item.owner_code),
-          value: Number(item.count) || 0,
-        }))
+  //       const data = json.data.map((item: any) => ({
+  //         code: (item.owner_code ?? "").toString().toUpperCase(),
+  //         name: codeToLabel(item.owner_code),
+  //         value: Number(item.count) || 0,
+  //       }))
 
-        // Sort by value desc; keep Unknown Owner last
-        data.sort((a: any, b: any) => {
-          const ua = a.name === "Unknown Owner"
-          const ub = b.name === "Unknown Owner"
-          if (ua !== ub) return ua ? 1 : -1
-          return b.value - a.value
-        })
+  //       // Sort by value desc; keep Unknown Owner last
+  //       data.sort((a: any, b: any) => {
+  //         const ua = a.name === "Unknown Owner"
+  //         const ub = b.name === "Unknown Owner"
+  //         if (ua !== ub) return ua ? 1 : -1
+  //         return b.value - a.value
+  //       })
 
-        setChartData(data)
-      } catch (err) {
-        console.error("Owner code chart load error:", err)
-      }
-    }
+  //       setChartData(data)
+  //     } catch (err) {
+  //       console.error("Owner code chart load error:", err)
+  //     }
+  //   }
 
-    fetchOwnerCodeData()
-  }, [])
+  //   fetchOwnerCodeData()
+  // }, [])
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     const RADIAN = Math.PI / 180
