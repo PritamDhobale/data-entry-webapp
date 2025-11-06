@@ -138,7 +138,7 @@ export function ClientsTable() {
       </div>
 
       <div className="text-sm text-gray-500">
-        Showing {filtered.length} of {clients.length} clients
+        Showing {filtered.length} of {clients.length} companies
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "MySage - InputHub",
   description: "Client Database Web Application for Sage Healthy",
   icons: {
-    icon: "/images/sage_healthy_rcm_logo.png",
+    icon: "/images/p.png",
   },
     generator: 'v0.dev'
 }

@@ -161,13 +161,15 @@ type CompanyData = {
   "SoS: Notes"?: string;
   "Secretary of State: Could Not Access"?: string;
 
-  // Source / Location metadata
-  "Location (Primary)"?: string;
-  Source?: string;
-  "Location (#2)"?: string;
-  "Location (#3)"?: string;
-  "Location (#4)"?: string;
-  "Location (#5)(#6)(etc.)"?: string;
+  /// Source / Location metadata (aligned with Supabase columns)
+  "Location Primary"?: string;
+  "Source Primary"?: string;
+  "Location Secondary"?: string;
+  "Source Secondary"?: string;
+  "Location Tertiary"?: string;
+  "Source Tertiary"?: string;
+  "Location Fourth"?: string;
+  "Source Fourth"?: string;
   // + their matching "Source" rows (we’ll show all keys)
   [k: string]: any;
 };
@@ -463,12 +465,14 @@ const GROUPS: Record<
     { key: "Secretary of State: Could Not Access", label: "Secretary of State: Could Not Access" },
   ],
   source: [
-    { key: "Location (Primary)", label: "Location (Primary)" },
-    { key: "Source", label: "Source (Primary)" },
-    { key: "Location (#2)", label: "Location (#2)" },
-    { key: "Location (#3)", label: "Location (#3)" },
-    { key: "Location (#4)", label: "Location (#4)" },
-    { key: "Location (#5)(#6)(etc.)", label: "Location (#5)(#6)(etc.)" },
+    { key: "Location Primary", label: "Location Primary" },
+    { key: "Source Primary", label: "Source Primary" },
+    { key: "Location Secondary", label: "Location Secondary" },
+    { key: "Source Secondary", label: "Source Secondary" },
+    { key: "Location Tertiary", label: "Location Tertiary" },
+    { key: "Source Tertiary", label: "Source Tertiary" },
+    { key: "Location Fourth", label: "Location Fourth" },
+    { key: "Source Fourth", label: "Source Fourth" },
   ],
 };
 
@@ -536,24 +540,30 @@ export default function CompanyDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+
     (async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("company_data")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-        if (error) throw error;
-        setRecord(data as CompanyData | null);
+        const res = await fetch(`/api/clients/${id}/get`);
+          if (!res.ok) throw new Error(`Failed to fetch details (status ${res.status})`);
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || "API returned error");
+
+          // ✅ FIX: flatten "client" data so FieldGrid can read directly
+          const flatData = json.client || json;
+
+          // Optional: Debug log (you can remove it after testing)
+          console.log("Loaded record data:", flatData);
+
+          setRecord(flatData as CompanyData);
       } catch (e) {
-        console.error(e);
+        console.error("Error loading company details:", e);
         setRecord(null);
       } finally {
         setLoading(false);
       }
     })();
-  }, [id, supabase]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -596,7 +606,9 @@ export default function CompanyDetailPage() {
           <div>
             <h1 className="text-2xl font-bold">{title}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary">Record ID: {String(record.id)}</Badge>
+              <Badge variant="secondary">
+                ID: {String(record.id || record.Id || "—")}
+              </Badge>
             </div>
           </div>
         </div>

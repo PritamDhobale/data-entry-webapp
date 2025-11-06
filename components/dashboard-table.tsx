@@ -60,12 +60,12 @@ export function DashboardTable() {
     );
   });
 
-  const handleRowClick = (id: string) => {
-    router.push(`/companies/${id}`);
+  const handleRowClick = (id: string | number) => {
+    router.push(`/clients/${id}`);
   };
 
   const handleViewAll = () => {
-    router.push("/companies");
+    router.push("/clients");
   };
 
   return (
