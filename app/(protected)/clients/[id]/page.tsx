@@ -616,7 +616,7 @@ export default function CompanyDetailPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex flex-wrap">
+        <TabsList>
           <TabsTrigger value="details">Details (Account Info)</TabsTrigger>
           <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
           <TabsTrigger value="bbb">BBB</TabsTrigger>

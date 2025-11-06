@@ -123,7 +123,7 @@ export function ReportsGenerator() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between border-b pb-2">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
+                      <Checkbox className="data-[state=checked]:bg-[#112B74] data-[state=checked]:border-[#112B74]"
                         checked={
                           filteredClients.length > 0 &&
                           filteredClients.every((c) =>
@@ -147,7 +147,7 @@ export function ReportsGenerator() {
 
                   {filteredClients.map((client) => (
                     <div key={client.id} className="flex items-center space-x-2 border-b py-1">
-                      <Checkbox
+                      <Checkbox className="data-[state=checked]:bg-[#112B74] data-[state=checked]:border-[#112B74]"
                         checked={selectedClients.includes(String(client.id))}
                         onCheckedChange={() => toggleClient(String(client.id))}
                       />
