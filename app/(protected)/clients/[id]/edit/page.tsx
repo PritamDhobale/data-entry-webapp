@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,151 +11,164 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, X } from "lucide-react";
 
-// ---------- Types ----------
-type CompanyData = {
-  id: string;                // primary key in company_data
-  practice_name?: string | null;
-  dba?: string | null;
-  code?: string | null;
-  owner_code?: string | null;
-  website?: string | null;
-  street_address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
-  email?: string | null;
-  phone?: string | null;
+// ---------- TYPES ----------
+type CompanyData = Record<string, any>;
 
-  // LinkedIn
-  linkedin_url?: string | null;
-  linkedin_followers?: string | null;
-  linkedin_about?: string | null;
-  linkedin_notes?: string | null;
-
-  // BBB
-  bbb_url?: string | null;
-  bbb_rating?: string | null;
-  bbb_complaints?: string | null;
-  bbb_notes?: string | null;
-
-  // Google Business
-  gmb_url?: string | null;
-  gmb_rating?: string | null;
-  gmb_reviews_count?: string | null;
-  gmb_owner?: string | null;
-  gmb_notes?: string | null;
-
-  // PPP (Payment/Portal/Profile)
-  ppp_url?: string | null;
-  ppp_username?: string | null;
-  ppp_notes?: string | null;
-
-  // SoS (Secretary of State)
-  sos_state?: string | null;
-  sos_entity_id?: string | null;
-  sos_status?: string | null;
-  sos_url?: string | null;
-  sos_notes?: string | null;
-
-  // Source Info
-  source?: string | null;
-  source_type?: string | null;
-  source_owner?: string | null;
-  source_notes?: string | null;
-
-  // free text
-  notes?: string | null;
-};
-
-// ---------- Field Config (tab -> fields) ----------
-type FieldDef = { key: keyof CompanyData; label: string; type?: "input" | "textarea" };
+// ---------- FIELD CONFIGURATION ----------
+type FieldDef = { key: string; label: string; type?: "input" | "textarea" };
 
 const GROUPS: Record<
-  string,
-  { title: string; fields: FieldDef[] }
+  "details" | "linkedin" | "bbb" | "google" | "ppp" | "sos" | "source",
+  FieldDef[]
 > = {
-  details: {
-    title: "Details (Account Info)",
-    fields: [
-      { key: "practice_name", label: "Practice Name" },
-      { key: "dba", label: "DBA" },
-      { key: "code", label: "Code" },
-      { key: "owner_code", label: "Owner Category (M/F/S/C/X)" },
-      { key: "website", label: "Website URL" },
-      { key: "street_address", label: "Street Address" },
-      { key: "city", label: "City" },
-      { key: "state", label: "State" },
-      { key: "zip", label: "Zip" },
-      { key: "email", label: "Primary Email" },
-      { key: "phone", label: "Primary Phone" },
-      { key: "notes", label: "General Notes", type: "textarea" },
-    ],
-  },
-  linkedin: {
-    title: "LinkedIn",
-    fields: [
-      { key: "linkedin_url", label: "LinkedIn URL" },
-      { key: "linkedin_followers", label: "Followers" },
-      { key: "linkedin_about", label: "About (short)", type: "textarea" },
-      { key: "linkedin_notes", label: "LinkedIn Notes", type: "textarea" },
-    ],
-  },
-  bbb: {
-    title: "BBB",
-    fields: [
-      { key: "bbb_url", label: "BBB URL" },
-      { key: "bbb_rating", label: "BBB Rating" },
-      { key: "bbb_complaints", label: "Complaints (count/summary)" },
-      { key: "bbb_notes", label: "BBB Notes", type: "textarea" },
-    ],
-  },
-  gmb: {
-    title: "Google Business",
-    fields: [
-      { key: "gmb_url", label: "Google Business URL" },
-      { key: "gmb_rating", label: "Rating" },
-      { key: "gmb_reviews_count", label: "Reviews Count" },
-      { key: "gmb_owner", label: "Profile Owner/Manager" },
-      { key: "gmb_notes", label: "GMB Notes", type: "textarea" },
-    ],
-  },
-  ppp: {
-    title: "PPP",
-    fields: [
-      { key: "ppp_url", label: "Portal/Profile URL" },
-      { key: "ppp_username", label: "Username/Handle" },
-      { key: "ppp_notes", label: "PPP Notes", type: "textarea" },
-    ],
-  },
-  sos: {
-    title: "SoS",
-    fields: [
-      { key: "sos_state", label: "State" },
-      { key: "sos_entity_id", label: "Entity ID" },
-      { key: "sos_status", label: "Status" },
-      { key: "sos_url", label: "SoS URL" },
-      { key: "sos_notes", label: "SoS Notes", type: "textarea" },
-    ],
-  },
-  source: {
-    title: "Source Info",
-    fields: [
-      { key: "source", label: "Source" },
-      { key: "source_type", label: "Source Type" },
-      { key: "source_owner", label: "Source Owner" },
-      { key: "source_notes", label: "Source Notes", type: "textarea" },
-    ],
-  },
+  details: [
+    { key: "Account Name", label: "Account Name" },
+    { key: "Website", label: "Website" },
+    { key: "Website Company Name", label: "Website Company Name" },
+    { key: "Website Company Name Abbreviated", label: "Website Company Name Abbreviated" },
+    { key: "Website Address", label: "Website Address" },
+    { key: "Website Street", label: "Website Street" },
+    { key: "Website City", label: "Website City" },
+    { key: "Website State", label: "Website State" },
+    { key: "Website Zip Code", label: "Website Zip Code" },
+    { key: "Website Country", label: "Website Country" },
+    { key: "Website: Full Company MSA", label: "Website: Full Company MSA" },
+    { key: "Website: Company MSA", label: "Website: Company MSA" },
+    { key: "Website: Region", label: "Website: Region" },
+    { key: "Website Office Phone", label: "Website Office Phone" },
+    { key: "Website Contacts", label: "Website Contacts" },
+    { key: "Website Locations (#)", label: "Website Locations (#)" },
+    { key: "Website Year Founded", label: "Website Year Founded" },
+    { key: "Website Employees", label: "Website Employees" },
+    { key: "Website Designations", label: "Website Designations" },
+    { key: "Website: Could Not Access", label: "Website: Could Not Access" },
+    { key: "Website: Notes", label: "Website: Notes", type: "textarea" },
+    { key: "Website Fax", label: "Website Fax" },
+    { key: "Website NAICS Code", label: "Website NAICS Code" },
+  ],
+  linkedin: [
+    { key: "Possible LinkedIn (#1)(Grata)", label: "Possible LinkedIn (#1)(Grata)" },
+    { key: "Possible LinkedIn (#2)(Zoominfo)", label: "Possible LinkedIn (#2)(Zoominfo)" },
+    { key: "LinkedIn (Url)", label: "LinkedIn (Url)" },
+    { key: "LinkedIn Company Name", label: "LinkedIn Company Name" },
+    { key: "LinkedIn Overview", label: "LinkedIn Overview", type: "textarea" },
+    { key: "Linkedin Followers", label: "Linkedin Followers" },
+    { key: "LinkedIn Phone", label: "LinkedIn Phone" },
+    { key: "LinkedIn Industry", label: "LinkedIn Industry" },
+    { key: "LinkedIn Employee Estimate", label: "LinkedIn Employee Estimate" },
+    { key: "LinkedIn Members", label: "LinkedIn Members" },
+    { key: "LinkedIn Headquarters", label: "LinkedIn Headquarters" },
+    { key: "LinkedIn Founded Year", label: "LinkedIn Founded Year" },
+    { key: "LinkedIn Specialties", label: "LinkedIn Specialties", type: "textarea" },
+    { key: "LinkedIn Contacts", label: "LinkedIn Contacts" },
+    { key: "LinkedIn Locations", label: "LinkedIn Locations" },
+    { key: "LinkedIn Primary Location", label: "LinkedIn Primary Location" },
+    { key: "LinkedIn Street", label: "LinkedIn Street" },
+    { key: "LinkedIn City", label: "LinkedIn City" },
+    { key: "LinkedIn State", label: "LinkedIn State" },
+    { key: "LinkedIn Zip Code", label: "LinkedIn Zip Code" },
+    { key: "LinkedIn Country", label: "LinkedIn Country" },
+    { key: "LinkedIn: Notes", label: "LinkedIn: Notes", type: "textarea" },
+    { key: "LinkedIn Unclaimed Page", label: "LinkedIn Unclaimed Page" },
+    { key: "LinkedIn: Could Not Access", label: "LinkedIn: Could Not Access" },
+  ],
+  bbb: [
+    { key: "BBB Link (Url)", label: "BBB Link (Url)" },
+    { key: "BBB Company Name", label: "BBB Company Name" },
+    { key: "BBB Business Started", label: "BBB Business Started" },
+    { key: "BBB Type of Entity", label: "BBB Type of Entity" },
+    { key: "BBB Alternate Names", label: "BBB Alternate Names" },
+    { key: "BBB Address", label: "BBB Address" },
+    { key: "BBB City", label: "BBB City" },
+    { key: "BBB State", label: "BBB State" },
+    { key: "BBB Zip Code", label: "BBB Zip Code" },
+    { key: "BBB Country", label: "BBB Country" },
+    { key: "BBB Accredited", label: "BBB Accredited" },
+    { key: "BBB: Notes", label: "BBB: Notes", type: "textarea" },
+    { key: "BBB Customer Contacts", label: "BBB Customer Contacts" },
+    { key: "BBB: Full Company MSA", label: "BBB: Full Company MSA" },
+    { key: "BBB: Region", label: "BBB: Region" },
+  ],
+  google: [
+    { key: "Google Business Page (Url)", label: "Google Business Page (Url)" },
+    { key: "Google Company Name", label: "Google Company Name" },
+    { key: "Google Reviews", label: "Google Reviews" },
+    { key: "Google Rating", label: "Google Rating" },
+    { key: "Google Address", label: "Google Address" },
+    { key: "Google Business City", label: "Google Business City" },
+    { key: "Google Business State", label: "Google Business State" },
+    { key: "Google Business Zip Code", label: "Google Business Zip Code" },
+    { key: "Google Business Country", label: "Google Business Country" },
+    { key: "Google Phone", label: "Google Phone" },
+    { key: "Google Business: Notes", label: "Google Business: Notes", type: "textarea" },
+    { key: "Google Business Street", label: "Google Business Street" },
+    { key: "Google Business: Full Company MSA", label: "Google Business: Full Company MSA" },
+    { key: "Google Business: Region", label: "Google Business: Region" },
+  ],
+  ppp: [
+    { key: "FederalPay PPP Link (Url)", label: "FederalPay PPP Link (Url)" },
+    { key: "PPP Company Name", label: "PPP Company Name" },
+    { key: "PPP Jobs Retained", label: "PPP Jobs Retained" },
+    { key: "PPP Total Loan Size", label: "PPP Total Loan Size" },
+    { key: "PPP Loan Size(#1)", label: "PPP Loan Size(#1)" },
+    { key: "PPP Loan Payroll Amount (#1)", label: "PPP Loan Payroll Amount (#1)" },
+    { key: "PPP Loan Size (#2)", label: "PPP Loan Size (#2)" },
+    { key: "PPP Loan Payroll Amount (#2)", label: "PPP Loan Payroll Amount (#2)" },
+    { key: "PPP City", label: "PPP City" },
+    { key: "PPP State", label: "PPP State" },
+    { key: "PPP Country", label: "PPP Country" },
+    { key: "PPP: Notes", label: "PPP: Notes", type: "textarea" },
+    { key: "PPP Address", label: "PPP Address" },
+    { key: "PPP Zip Code", label: "PPP Zip Code" },
+    { key: "PPP Business Demographics", label: "PPP Business Demographics" },
+    { key: "PPP Business Owner Demographics", label: "PPP Business Owner Demographics" },
+    { key: "PPP NAICS Code", label: "PPP NAICS Code" },
+  ],
+  sos: [
+    { key: "SoS Company Name", label: "SoS Company Name" },
+    { key: "SoS Filing Type", label: "SoS Filing Type" },
+    { key: "SoS Registered Agent", label: "SoS Registered Agent" },
+    { key: "SoS Officers", label: "SoS Officers" },
+    { key: "SoS Year Founded", label: "SoS Year Founded" },
+    { key: "SoS Principal City", label: "SoS Principal City" },
+    { key: "SoS Principal State", label: "SoS Principal State" },
+    { key: "SoS Principal Country", label: "SoS Principal Country" },
+    { key: "SoS: Notes", label: "SoS: Notes", type: "textarea" },
+    { key: "SoS Principal Address", label: "SoS Principal Address" },
+    { key: "SoS Principal Street", label: "SoS Principal Street" },
+    { key: "SoS Principal Zip Code", label: "SoS Principal Zip Code" },
+    { key: "SoS Principal Country", label: "SoS Principal Country" },
+    { key: "SoS Agent Address", label: "SoS Agent Address" },
+    { key: "SoS Agent Street", label: "SoS Agent Street" },
+    { key: "SoS Agent City", label: "SoS Agent City" },
+    { key: "SoS Agent State", label: "SoS Agent State" },
+    { key: "SoS Agent Country", label: "SoS Agent Country" },
+    { key: "SoS Fictitious Names", label: "SoS Fictitious Names" },
+    { key: "SoS Agent Region", label: "SoS Agent Region" },
+    { key: "SoS Agent: Full Company MSA", label: "SoS Agent: Full Company MSA" },
+    { key: "SoS Principal: Full Company MSA", label: "SoS Principal: Full Company MSA" },
+  ],
+  source: [
+    { key: "Location Primary", label: "Location Primary" },
+    { key: "Source Primary", label: "Source Primary" },
+    { key: "Location Secondary", label: "Location Secondary" },
+    { key: "Source Secondary", label: "Source Secondary" },
+    { key: "Location Tertiary", label: "Location Tertiary" },
+    { key: "Source Tertiary", label: "Source Tertiary" },
+    { key: "Location Fourth", label: "Location Fourth" },
+    { key: "Source Fourth", label: "Source Fourth" },
+  ],
 };
 
-// ---------- Helpers ----------
+// ---------- HELPERS ----------
 const nullIfEmpty = (v: unknown) => {
   if (v === undefined || v === null) return null;
   const s = String(v).trim();
   return s.length === 0 ? null : s;
 };
 
-export default function EditClientPage() {
+// ---------- COMPONENT ----------
+export default function EditCompanyPage() {
   const router = useRouter();
   const params = useParams();
   const rawId = params?.id;
@@ -167,18 +180,19 @@ export default function EditClientPage() {
   const [dirty, setDirty] = useState(false);
   const [activeTab, setActiveTab] = useState<keyof typeof GROUPS>("details");
 
-  // Fetch record
+  // --- Fetch record ---
   useEffect(() => {
     (async () => {
       try {
         if (!rowId) return;
-        const { data, error } = await supabase
-          .from("company_data")
-          .select("*")
-          .eq("id", rowId)
-          .single();
-        if (error) throw error;
-        setData(data);
+        const res = await fetch(`/api/companies/${rowId}`);
+        const result = await res.json();
+
+        if (!result.success || !result.company) {
+          throw new Error(result.error || "Failed to fetch company");
+        }
+
+        setData({ id: rowId, ...result.company });
       } catch (e) {
         console.error(e);
         alert("Failed to load Company.");
@@ -190,43 +204,46 @@ export default function EditClientPage() {
   }, [rowId, router]);
 
   const title = useMemo(() => {
-    return data?.practice_name ? `Edit: ${data.practice_name}` : "Edit Company";
-  }, [data?.practice_name]);
+    return data?.["Account Name"] ? `Edit: ${data["Account Name"]}` : "Edit Company";
+  }, [data?.["Account Name"]]);
 
-  const onChangeField = (key: keyof CompanyData, value: string) => {
-    setData((prev) =>
-      prev ? { ...prev, [key]: value } as CompanyData : prev
-    );
+  const onChangeField = (key: string, value: string) => {
+    setData((prev) => (prev ? { ...prev, [key]: value } : prev));
     setDirty(true);
   };
 
   const onSave = async () => {
-    if (!data?.id) {
+    if (!data?.ID && !data?.id) {
       alert("Missing record ID.");
       return;
     }
+
+    const recordId = data?.ID || data?.id;
+
     setSaving(true);
     try {
-      // prepare payload with nulls for blank strings
-      const payload: Partial<CompanyData> = {};
-      Object.keys(data).forEach((k) => {
-        const key = k as keyof CompanyData;
-        if (key === "id") return;
+      // Clean empty fields
+      const payload: Record<string, any> = {};
+      Object.keys(data).forEach((key) => {
+        if (key === "ID" || key === "id") return;
         payload[key] = nullIfEmpty(data[key]);
       });
 
-      const { error } = await supabase
-        .from("company_data")
-        .update(payload)
-        .eq("id", data.id);
+      const res = await fetch("/api/companies/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordId, ...payload }),
+      });
 
-      if (error) throw error;
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+
       setDirty(false);
-      alert("Saved successfully.");
-      router.push(`/clients/${encodeURIComponent(data.id)}`);
+      alert("✅ Saved successfully.");
+      router.push(`/clients/${encodeURIComponent(recordId)}`);
     } catch (e) {
       console.error(e);
-      alert("Failed to save changes.");
+      alert("❌ Failed to save changes.");
     } finally {
       setSaving(false);
     }
@@ -234,22 +251,18 @@ export default function EditClientPage() {
 
   const onCancel = () => {
     if (dirty && !confirm("Discard unsaved changes?")) return;
-    if (data?.id) {
-      router.push(`/clients/${encodeURIComponent(data.id)}`);
-    } else {
-      router.push("/clients");
-    }
+    if (data?.id) router.push(`/clients/${encodeURIComponent(data.id)}`);
+    else router.push("/clients");
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="text-sm text-muted-foreground">Loading…</div>
       </div>
     );
-  }
 
-  if (!data) {
+  if (!data)
     return (
       <div className="p-4">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
@@ -266,7 +279,6 @@ export default function EditClientPage() {
         </Card>
       </div>
     );
-  }
 
   return (
     <div className="space-y-5">
@@ -281,8 +293,7 @@ export default function EditClientPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={onCancel}>
-            <X className="mr-2 h-4 w-4" />
-            Cancel
+            <X className="mr-2 h-4 w-4" /> Cancel
           </Button>
           <Button onClick={onSave} disabled={saving || !dirty}>
             <Save className="mr-2 h-4 w-4" />
@@ -306,16 +317,16 @@ export default function EditClientPage() {
               <TabsTrigger value="details">Details (Account Info)</TabsTrigger>
               <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
               <TabsTrigger value="bbb">BBB</TabsTrigger>
-              <TabsTrigger value="gmb">Google Business</TabsTrigger>
+              <TabsTrigger value="google">Google Business</TabsTrigger>
               <TabsTrigger value="ppp">PPP</TabsTrigger>
               <TabsTrigger value="sos">SoS</TabsTrigger>
               <TabsTrigger value="source">Source Info</TabsTrigger>
             </TabsList>
 
-            {Object.entries(GROUPS).map(([key, group]) => (
+            {Object.entries(GROUPS).map(([key, fields]) => (
               <TabsContent key={key} value={key}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                  {group.fields.map((f) => {
+                  {fields.map((f) => {
                     const val = (data?.[f.key] ?? "") as string;
                     return (
                       <div key={String(f.key)} className="space-y-2">
@@ -342,11 +353,10 @@ export default function EditClientPage() {
             ))}
           </Tabs>
 
-          {/* Footer Save (for long forms) */}
+          {/* Footer Save */}
           <div className="mt-6 flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel}>
-              <X className="mr-2 h-4 w-4" />
-              Cancel
+              <X className="mr-2 h-4 w-4" /> Cancel
             </Button>
             <Button onClick={onSave} disabled={saving || !dirty}>
               <Save className="mr-2 h-4 w-4" />

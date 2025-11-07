@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, Eye, FileUp } from "lucide-react";
+import { Search, Download, Eye, FileUp, Trash2 } from "lucide-react";
 
 export function ClientsTable() {
   const router = useRouter();
@@ -122,13 +122,38 @@ export function ClientsTable() {
                   </TableCell> */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Button size="icon" variant="outline" onClick={() => router.push(`/clients/${client.id}`)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="outline">
-                        <FileUp className="h-4 w-4" />
-                      </Button>
-                    </div>
+  <Button size="icon" variant="outline" onClick={() => router.push(`/clients/${client.id}`)}>
+    <Eye className="h-4 w-4" />
+  </Button>
+
+  <Button
+    size="icon"
+    variant="destructive"
+    onClick={async () => {
+      if (!confirm(`Are you sure you want to delete "${client.account_name}"? This action cannot be undone.`)) return;
+
+      try {
+        const res = await fetch("/api/clients/delete", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: client.id }),
+        });
+
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error);
+
+        alert("✅ Client deleted successfully.");
+        fetchClients(); // refresh table
+      } catch (err) {
+        console.error("❌ Delete failed:", err);
+        alert("❌ Failed to delete client.");
+      }
+    }}
+  >
+    <Trash2 className="h-4 w-4" />
+  </Button>
+</div>
+
                   </TableCell>
                 </TableRow>
               ))

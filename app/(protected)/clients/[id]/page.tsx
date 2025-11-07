@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download } from "lucide-react";
+import { Edit, Trash2, RefreshCw } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,9 +34,9 @@ type CompanyData = {
   "Website State"?: string;
   "Website Zip Code"?: string;
   "Website Country"?: string;
-  "Website: Full Company MSA"?: string;
-  "Website: Company MSA"?: string;
-  "Website: Region"?: string;
+  "Website Full Company MSA"?: string;
+  "Website Company MSA"?: string;
+  "Website Region"?: string;
   "Website Office Phone"?: string;
   "Website Contacts"?: string;
   "Website Locations (#)"?: string | number;
@@ -68,11 +69,11 @@ type CompanyData = {
   "LinkedIn State"?: string;
   "LinkedIn Zip Code"?: string;
   "LinkedIn Country"?: string;
-  "LinkedIn: Full Company MSA"?: string;
-  "LinkedIn: Company MSA"?: string;
-  "LinkedIn: Region"?: string;
-  "LinkedIn: Notes"?: string;
-  "Linkedin: Unclaimed Page"?: string;
+  "LinkedIn Full Company MSA"?: string;
+  "LinkedIn Company MSA"?: string;
+  "LinkedIn Region"?: string;
+  "LinkedIn Notes"?: string;
+  "Linkedin Unclaimed Page"?: string;
 
   // Google Business
   "Google Business Page (Url)"?: string;
@@ -103,11 +104,11 @@ type CompanyData = {
   "BBB State"?: string;
   "BBB Zip Code"?: string;
   "BBB Country"?: string;
-  "BBB: Full Company MSA"?: string;
-  "BBB: Company MSA"?: string;
-  "BBB: Region"?: string;
+  "BBB Full Company MSA"?: string;
+  "BBB Company MSA"?: string;
+  "BBB Region"?: string;
   "BBB Customer Contacts"?: string;
-  "BBB: Notes"?: string;
+  "BBB Notes"?: string;
   "BBB Accredited"?: string;
 
   // PPP (FederalPay)
@@ -125,13 +126,13 @@ type CompanyData = {
   "PPP State"?: string;
   "PPP Zip Code"?: string;
   "PPP Country"?: string;
-  "PPP: Full Company MSA"?: string;
-  "PPP: Company MSA"?: string;
-  "PPP: Region"?: string;
+  "PPP Full Company MSA"?: string;
+  "PPP Company MSA"?: string;
+  "PPP Region"?: string;
   "PPP Business Demographics"?: string;
   "PPP NAICS Code"?: string;
   "PPP Business Owner Demographics"?: string;
-  "PPP: Notes"?: string;
+  "PPP Notes"?: string;
 
   // SoS
   "SoS Company Name"?: string;
@@ -158,7 +159,7 @@ type CompanyData = {
   "SoS Registered Agent"?: string;
   "SoS Officers"?: string;
   "SoS Year Founded"?: string | number;
-  "SoS: Notes"?: string;
+  "SoS Notes"?: string;
   "Secretary of State: Could Not Access"?: string;
 
   /// Source / Location metadata (aligned with Supabase columns)
@@ -179,6 +180,8 @@ function InlineDocumentList({ recordId }: { recordId: string | number }) {
   const [documents, setDocuments] = useState<{ file_name: string; created_at: string }[]>([]);
   const [agreements, setAgreements] = useState<{ file_name: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
 
   const fetchFiles = async () => {
     if (!recordId) return;
@@ -612,6 +615,32 @@ export default function CompanyDetailPage() {
             </div>
           </div>
         </div>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 mt-4">
+  <Button
+    variant="outline"
+    onClick={() => {
+      const clientId =
+        record.id ||
+        record.Id ||
+        record.client_id ||
+        record.company_id ||
+        record["id"] ||
+        record["Id"];
+      if (clientId) {
+        router.push(`/clients/${clientId}/edit`);
+      } else {
+        alert("Client ID not found. Please check the record data.");
+        console.error("Record object missing ID:", record);
+      }
+    }}
+    className="flex items-center gap-2"
+  >
+    <Edit className="h-4 w-4" />
+    Edit Company
+  </Button>
+</div>
+
       </div>
 
       {/* Tabs */}
