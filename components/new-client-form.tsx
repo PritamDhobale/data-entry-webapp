@@ -121,7 +121,6 @@ const FIELDS_BY_SECTION: Record<
     { label: "Website Employees", name: "website_employees" },
     { label: "Website Designations", name: "website_designations" },
     { label: "Website: Could Not Access", name: "website_could_not_access" },
-    { label: "Website Notes", name: "website_notes" },
   ],
 
   /* ------------------------------ LINKEDIN ------------------------------ */
@@ -504,11 +503,6 @@ export function NewClientForm() {
             Upload CSV
             <input type="file" accept=".csv" onChange={onUploadCSV} className="hidden" />
           </label>
-
-          <label className="px-4 py-2 rounded-md text-sm font-medium cursor-pointer border">
-            Upload Documents
-            <input type="file" multiple onChange={onFiles} className="hidden" />
-          </label>
         </div>
 
         <Separator />
@@ -548,28 +542,62 @@ export function NewClientForm() {
                   {FIELDS_BY_SECTION[t.id].map(({ label, name }) => {
                     const type = guessType(label, name);
                     return (
-                      <div key={name} className="space-y-2">
-                        <Label htmlFor={name}>{label}</Label>
-                        {type === "textarea" ? (
-                          <Textarea
-                            id={name}
-                            value={form[name] || ""}
-                            onChange={(e) => setValue(name, e.target.value)}
-                            className="min-h-[92px]"
-                            placeholder={label}
-                          />
-                        ) : (
-                          <Input
-                            id={name}
-                            type={type === "number" ? "text" : type}
-                            inputMode={type === "number" ? "numeric" : undefined}
-                            value={form[name] || ""}
-                            onChange={(e) => setValue(name, e.target.value)}
-                            placeholder={label}
-                          />
-                        )}
-                      </div>
-                    );
+  <div key={name} className="space-y-2">
+    <Label htmlFor={name}>{label}</Label>
+
+    {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
+    {name.includes("could_not_access") ? (
+      <select
+        id={name}
+        value={form[name] || "false"}
+        onChange={(e) => setValue(name, e.target.value)}
+        className="border rounded-md p-2 w-full"
+      >
+        <option value="false">False</option>
+        <option value="true">True</option>
+      </select>
+    ) : /* ✅ 2. Handle textarea fields normally */ type === "textarea" ? (
+      <Textarea
+        id={name}
+        value={form[name] || ""}
+        onChange={(e) => setValue(name, e.target.value)}
+        className="min-h-[92px]"
+        placeholder={label}
+      />
+    ) : /* ✅ 3. Add a clickable Website link (still editable) */ name === "website" ? (
+      <div>
+        <Input
+          id={name}
+          type="text"
+          value={form[name] || ""}
+          onChange={(e) => setValue(name, e.target.value)}
+          placeholder={label}
+        />
+        {form[name] && (
+          <a
+            href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline text-sm"
+          >
+            Visit Website
+          </a>
+        )}
+      </div>
+    ) : (
+      /* ✅ 4. All other fields default */
+      <Input
+        id={name}
+        type={type === "number" ? "text" : type}
+        inputMode={type === "number" ? "numeric" : undefined}
+        value={form[name] || ""}
+        onChange={(e) => setValue(name, e.target.value)}
+        placeholder={label}
+      />
+    )}
+  </div>
+);
+
                   })}
                 </div>
               )}
