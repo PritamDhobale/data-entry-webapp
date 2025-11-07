@@ -18,6 +18,49 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
 
+/** ---------------- ZIP Lookup + MSA Helpers ---------------- */
+const ZIP_CACHE: Record<string, { city: string; state: string; msa?: string }> = {};
+
+/** Fetches city & state from Zippopotam (no API key needed) */
+async function fetchZipInfo(zip: string) {
+  if (ZIP_CACHE[zip]) return ZIP_CACHE[zip];
+
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const place = data.places?.[0];
+    const city = place?.["place name"] || "";
+    const state = place?.["state"] || "";
+    ZIP_CACHE[zip] = { city, state };
+    return ZIP_CACHE[zip];
+  } catch (err) {
+    console.error("ZIP lookup failed:", err);
+    return null;
+  }
+}
+
+/** Fetches MSA info from your Supabase zip_lookup table (via /api/msa route) */
+async function fetchMsa(zip: string): Promise<string> {
+  if (ZIP_CACHE[zip]?.msa) return ZIP_CACHE[zip].msa!;
+
+  try {
+    const res = await fetch(`/api/msa?zip=${zip}`); // ✅ new Supabase API
+    if (!res.ok) {
+      console.error("MSA lookup failed: bad response", res.status);
+      return "";
+    }
+
+    const data = await res.json();
+    const msa = data.msa || "";
+    ZIP_CACHE[zip] = { ...(ZIP_CACHE[zip] || {}), msa };
+    return msa;
+  } catch (err) {
+    console.error("MSA lookup failed:", err);
+    return "";
+  }
+}
+
 /* ------------------------------ BRAND ---------------------------------- */
 const BRAND = {
   primary: "#112B74",
@@ -250,9 +293,45 @@ export function NewClientForm() {
   );
   const [form, setForm] = useState<FormDataState>(initial);
 
-  const setValue = (name: string, value: string) => {
-    setForm((p) => ({ ...p, [name]: value }));
-  };
+  const setValue = async (name: string, value: string) => {
+  setForm((p) => ({ ...p, [name]: value }));
+
+  // --- ZIP Code Auto-Fill Logic ---
+  if (name.endsWith("zip_code") && value.length === 5 && /^[0-9]{5}$/.test(value)) {
+    const zipInfo = await fetchZipInfo(value);
+    const msa = await fetchMsa(value);
+
+    if (zipInfo) {
+      // Determine which section the zip belongs to
+      if (name.includes("website")) {
+        setForm((p) => ({
+          ...p,
+          website_city: zipInfo.city,
+          website_state: zipInfo.state,
+          website_full_company_msa: msa,
+          website_company_msa: msa,
+        }));
+      } else if (name.includes("linkedin")) {
+        setForm((p) => ({
+          ...p,
+          linkedin_city: zipInfo.city,
+          linkedin_state: zipInfo.state,
+          linkedin_full_company_msa: msa,
+          linkedin_company_msa: msa,
+        }));
+      } else if (name.includes("ppp")) {
+        setForm((p) => ({
+          ...p,
+          ppp_city: zipInfo.city,
+          ppp_state: zipInfo.state,
+          ppp_full_company_msa: msa,
+          ppp_company_msa: msa,
+        }));
+      }
+    }
+  }
+};
+
 
   const downloadTemplate = () => {
     const csv = ALL_KEYS.join(",") + "\n";

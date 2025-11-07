@@ -50,13 +50,7 @@ export default function Header() {
 
       <div className="flex items-center space-x-4">
         <Notifications />
-        <Button
-  onClick={() => router.push("/history")}
-  className="text-sm bg-[#112B74] hover:bg-[#0E2463] text-white px-4 py-2 rounded-md shadow-sm transition-colors"
->
-  <Clock className="h-4 w-4 mr-1 text-[#E9A41A]" />
-  History
-</Button>
+        
 
 
         {/* <DropdownMenu>
