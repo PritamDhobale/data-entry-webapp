@@ -86,7 +86,7 @@ const TAB_ORDER = [
   { id: "ppp", title: "PPP" },
   { id: "sos", title: "SoS" },
   { id: "source_info", title: "Source Info" },
-  { id: "documents", title: "Documents" },
+  // { id: "documents", title: "Documents" },
   { id: "metadata", title: "Metadata" },
 ] as const;
 
@@ -159,12 +159,42 @@ const FIELDS_BY_SECTION: Record<
   /* --------------------------------- BBB -------------------------------- */
   bbb: [
     { label: "BBB Link (Url)", name: "bbb_link_url" },
+    { label: "BBB Company Name", name: "bbb_company_name" },
+    { label: "BBB Business Started", name: "bbb_business_started" },
+    { label: "BBB Type of Entity", name: "bbb_type_of_entity" },
+    { label: "BBB Alternate Names", name: "bbb_alternate_names" },
+    { label: "BBB Address", name: "bbb_address" },
+    { label: "BBB Street", name: "bbb_street" },
+    { label: "BBB City", name: "bbb_city" },
+    { label: "BBB State", name: "bbb_state" },
+    { label: "BBB Zip Code", name: "bbb_zip_code" },
+    { label: "BBB Country", name: "bbb_country" },
+    { label: "BBB: Full Company MSA", name: "bbb_full_company_msa" },
+    { label: "BBB: Company MSA", name: "bbb_company_msa" },
+    { label: "BBB: Region", name: "bbb_region" },
+    { label: "BBB Customer Contacts", name: "bbb_customer_contacts" },
+    { label: "BBB: Notes", name: "bbb_notes" },
+    { label: "BBB Accredited", name: "bbb_accredited" },
     { label: "BBB: Could Not Access", name: "bbb_could_not_access" },
   ],
 
   /* --------------------------- GOOGLE BUSINESS -------------------------- */
   google_business: [
     { label: "Google Business Page (Url)", name: "google_business_page_url" },
+    { label: "Google Company Name", name: "google_company_name" },
+    { label: "Google Reviews", name: "google_reviews" },
+    { label: "Google Rating", name: "google_rating" },
+    { label: "Google Address", name: "google_address" },
+    { label: "Google Business Street", name: "google_business_street" },
+    { label: "Google Business City", name: "google_business_city" },
+    { label: "Google Business State", name: "google_business_state" },
+    { label: "Google Business Zip Code", name: "google_business_zip_code" },
+    { label: "Google Business Country", name: "google_business_country" },
+    { label: "Google Business: Full Company MSA", name: "google_full_company_msa" },
+    { label: "Google Business: Company MSA", name: "google_company_msa" },
+    { label: "Google Business: Region", name: "google_region" },
+    { label: "Google Phone", name: "google_phone" },
+    { label: "Google Business: Notes", name: "google_notes" },
     { label: "Google Business: Could Not Access", name: "google_could_not_access" },
   ],
 
@@ -196,7 +226,31 @@ const FIELDS_BY_SECTION: Record<
 
   /* --------------------------------- SoS -------------------------------- */
   sos: [
-    { label: "Secretary of State: Company Name", name: "sos_company_name" },
+    { label: "SoS Company Name", name: "sos_company_name" },
+    { label: "SoS Fictitious Names", name: "sos_fictitious_names" },
+    { label: "SoS Filing Type", name: "sos_filing_type" },
+    { label: "SoS Agent Address", name: "sos_agent_address" },
+    { label: "SoS Agent Street", name: "sos_agent_street" },
+    { label: "SoS Agent City", name: "sos_agent_city" },
+    { label: "SoS Agent State", name: "sos_agent_state" },
+    { label: "SoS Agent Zip Code", name: "sos_agent_zip_code" },
+    { label: "SoS Agent Country", name: "sos_agent_country" },
+    { label: "SoS Agent: Full Company MSA", name: "sos_agent_full_company_msa" },
+    { label: "SoS Agent: Company MSA", name: "sos_agent_company_msa" },
+    { label: "SoS Agent: Region", name: "sos_agent_region" },
+    { label: "SoS Principal Address", name: "sos_principal_address" },
+    { label: "SoS Principal Street", name: "sos_principal_street" },
+    { label: "SoS Principal City", name: "sos_principal_city" },
+    { label: "SoS Principal State", name: "sos_principal_state" },
+    { label: "SoS Principal Zip Code", name: "sos_principal_zip_code" },
+    { label: "SoS Principal Country", name: "sos_principal_country" },
+    { label: "SoS Principal: Full Company MSA", name: "sos_principal_full_company_msa" },
+    { label: "SoS Principal: Company MSA", name: "sos_principal_company_msa" },
+    { label: "SoS Principal: Region", name: "sos_principal_region" },
+    { label: "SoS Registered Agent", name: "sos_registered_agent" },
+    { label: "SoS Officers", name: "sos_officers" },
+    { label: "SoS Year Founded", name: "sos_year_founded" },
+    { label: "SoS: Notes", name: "sos_notes" },
     { label: "Secretary of State: Could Not Access", name: "sos_could_not_access" },
   ],
 
@@ -225,7 +279,7 @@ const FIELDS_BY_SECTION: Record<
   ],
 
   /* ------------------------------- DOCUMENTS ---------------------------- */
-  documents: [], // handled separately (file inputs)
+  // documents: [], // handled separately (file inputs)
 };
 
 /** Build a label->key dictionary for CSV upload convenience */
@@ -301,33 +355,42 @@ export function NewClientForm() {
     const msa = await fetchMsa(value);
 
     if (zipInfo) {
-      // Determine which section the zip belongs to
-      if (name.includes("website")) {
-        setForm((p) => ({
-          ...p,
-          website_city: zipInfo.city,
-          website_state: zipInfo.state,
-          website_full_company_msa: msa,
-          website_company_msa: msa,
-        }));
-      } else if (name.includes("linkedin")) {
-        setForm((p) => ({
-          ...p,
-          linkedin_city: zipInfo.city,
-          linkedin_state: zipInfo.state,
-          linkedin_full_company_msa: msa,
-          linkedin_company_msa: msa,
-        }));
-      } else if (name.includes("ppp")) {
-        setForm((p) => ({
-          ...p,
-          ppp_city: zipInfo.city,
-          ppp_state: zipInfo.state,
-          ppp_full_company_msa: msa,
-          ppp_company_msa: msa,
-        }));
-      }
-    }
+  if (name.includes("website")) {
+    setForm((p) => ({
+      ...p,
+      website_city: zipInfo.city,
+      website_state: zipInfo.state,
+      website_full_company_msa: msa,
+      website_company_msa: msa,
+    }));
+  } else if (name.includes("linkedin")) {
+    setForm((p) => ({
+      ...p,
+      linkedin_city: zipInfo.city,
+      linkedin_state: zipInfo.state,
+      linkedin_full_company_msa: msa,
+      linkedin_company_msa: msa,
+    }));
+  } else if (name.includes("ppp")) {
+    setForm((p) => ({
+      ...p,
+      ppp_city: zipInfo.city,
+      ppp_state: zipInfo.state,
+      ppp_full_company_msa: msa,
+      ppp_company_msa: msa,
+    }));
+  } else if (name.includes("sos") || name.includes("principal")) {
+    // ✅ New: handles SoS Principal fields
+    setForm((p) => ({
+      ...p,
+      sos_principal_city: zipInfo.city,
+      sos_principal_state: zipInfo.state,
+      sos_principal_full_company_msa: msa,
+      sos_principal_company_msa: msa,
+    }));
+  }
+}
+
   }
 };
 
@@ -521,88 +584,78 @@ export function NewClientForm() {
             ))}
           </TabsList>
 
-          {TAB_ORDER.map((t) => (
-            <TabsContent key={t.id} value={t.id} className="mt-4">
-              {t.id === "documents" ? (
-                <div className="text-sm text-muted-foreground">
-                  {documents.length === 0 ? (
-                    <p>No documents selected.</p>
-                  ) : (
-                    <ul className="list-disc pl-5">
-                      {documents.map((f, i) => (
-                        <li key={i}>
-                          {f.name} — {(f.size / 1024).toFixed(1)} KB
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {FIELDS_BY_SECTION[t.id].map(({ label, name }) => {
-                    const type = guessType(label, name);
-                    return (
-  <div key={name} className="space-y-2">
-    <Label htmlFor={name}>{label}</Label>
+          {TAB_ORDER.filter((t) => String(t.id) !== "documents").map((t) => (
+  <TabsContent key={t.id} value={t.id as string} className="mt-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {FIELDS_BY_SECTION[t.id as keyof typeof FIELDS_BY_SECTION].map(({ label, name }) => {
+        const type = guessType(label, name);
 
-    {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
-    {name.includes("could_not_access") ? (
-      <select
-        id={name}
-        value={form[name] || "false"}
-        onChange={(e) => setValue(name, e.target.value)}
-        className="border rounded-md p-2 w-full"
-      >
-        <option value="false">False</option>
-        <option value="true">True</option>
-      </select>
-    ) : /* ✅ 2. Handle textarea fields normally */ type === "textarea" ? (
-      <Textarea
-        id={name}
-        value={form[name] || ""}
-        onChange={(e) => setValue(name, e.target.value)}
-        className="min-h-[92px]"
-        placeholder={label}
-      />
-    ) : /* ✅ 3. Add a clickable Website link (still editable) */ name === "website" ? (
-      <div>
-        <Input
-          id={name}
-          type="text"
-          value={form[name] || ""}
-          onChange={(e) => setValue(name, e.target.value)}
-          placeholder={label}
-        />
-        {form[name] && (
-          <a
-            href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline text-sm"
-          >
-            Visit Website
-          </a>
-        )}
-      </div>
-    ) : (
-      /* ✅ 4. All other fields default */
-      <Input
-        id={name}
-        type={type === "number" ? "text" : type}
-        inputMode={type === "number" ? "numeric" : undefined}
-        value={form[name] || ""}
-        onChange={(e) => setValue(name, e.target.value)}
-        placeholder={label}
-      />
-    )}
-  </div>
-);
+        return (
+          <div key={name} className="space-y-2">
+            <Label htmlFor={name}>{label}</Label>
 
-                  })}
-                </div>
-              )}
-            </TabsContent>
-          ))}
+            {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
+            {name.includes("could_not_access") ? (
+              <select
+                id={name}
+                value={form[name] || "false"}
+                onChange={(e) => setValue(name, e.target.value)}
+                className="border rounded-md p-2 w-full"
+              >
+                <option value="false">False</option>
+                <option value="true">True</option>
+              </select>
+            ) : 
+            /* ✅ 2. Handle textarea fields normally */ 
+            type === "textarea" ? (
+              <Textarea
+                id={name}
+                value={form[name] || ""}
+                onChange={(e) => setValue(name, e.target.value)}
+                className="min-h-[92px]"
+                placeholder={label}
+              />
+            ) : 
+            /* ✅ 3. Add a clickable Website link (still editable) */ 
+            name === "website" ? (
+              <div>
+                <Input
+                  id={name}
+                  type="text"
+                  value={form[name] || ""}
+                  onChange={(e) => setValue(name, e.target.value)}
+                  placeholder={label}
+                />
+                {form[name] && (
+                  <a
+                    href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline text-sm"
+                  >
+                    Visit Website
+                  </a>
+                )}
+              </div>
+            ) : (
+              /* ✅ 4. All other fields default */
+              <Input
+                id={name}
+                type={type === "number" ? "text" : type}
+                inputMode={type === "number" ? "numeric" : undefined}
+                value={form[name] || ""}
+                onChange={(e) => setValue(name, e.target.value)}
+                placeholder={label}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </TabsContent>
+))}
+
+
         </Tabs>
 
         <DialogFooter className="mt-4">
