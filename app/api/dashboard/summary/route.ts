@@ -76,10 +76,10 @@ export async function GET() {
       {
         success: true,
         totalCompanies: totalCompanies ?? 0,
-        averageGoogleRating,
-        totalBBBAccredited,
-        averageEmployeeEstimate,
-        distinctIndustries
+        avgGoogleRating: averageGoogleRating,       // ⬅ changed
+        bbbAccredited: totalBBBAccredited,          // ⬅ renamed
+        avgEmployees: averageEmployeeEstimate,      // ⬅ changed
+        totalIndustries: distinctIndustries,        // ⬅ changed
       },
       { status: 200 }
     );

@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download } from "lucide-react";
 import { Edit, Trash2, RefreshCw } from "lucide-react";
+import { useRole } from "@/context/role-context";
+import { permissions } from "@/context/permissions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -331,6 +333,10 @@ const GROUPS: Record<
   details: [
     { key: "Account Name", label: "Account Name" },
     { key: "Website", label: "Website" },
+    { key: "Annual Revenue", label: "Annual Revenue" },
+    { key: "Email", label: "Email" },
+    { key: "Contact on Website", label: "Contact on Website" },
+    { key: "Title", label: "Title" },
     { key: "Website Company Name", label: "Website Company Name" },
     { key: "Website Company Name Abbreviated", label: "Website Company Name Abbreviated" },
     { key: "Website Address", label: "Website Address" },
@@ -339,23 +345,23 @@ const GROUPS: Record<
     { key: "Website State", label: "Website State" },
     { key: "Website Zip Code", label: "Website Zip Code" },
     { key: "Website Country", label: "Website Country" },
-    { key: "Website: Full Company MSA", label: "Website: Full Company MSA" },
-    { key: "Website: Company MSA", label: "Website: Company MSA" },
-    { key: "Website: Region", label: "Website: Region" },
+    { key: "Website Full Company MSA", label: "Website: Full Company MSA" },
+    { key: "Website Company MSA", label: "Website: Company MSA" },
+    { key: "Website Region", label: "Website: Region" },
     { key: "Website Office Phone", label: "Website Office Phone" },
     { key: "Website Contacts", label: "Website Contacts" },
-    { key: "Website Locations (#)", label: "Website Locations (#)" },
+    { key: "Website Locations", label: "Website Locations (#)" },
     { key: "Website Year Founded", label: "Website Year Founded" },
     { key: "Website Employees", label: "Website Employees" },
     { key: "Website Designations", label: "Website Designations" },
-    { key: "Website: Could Not Access", label: "Website: Could Not Access" },
-    { key: "Website: Notes", label: "Website: Notes" },
+    { key: "Website Could Not Access", label: "Website: Could Not Access" },
+    { key: "Website Notes", label: "Website: Notes" },
   ],
   linkedin: [
-    { key: "Possible LinkedIn (#1)(Grata)", label: "Possible LinkedIn (#1)(Grata)" },
-    { key: "Possible LinkedIn (#2)(Zoominfo)", label: "Possible LinkedIn (#2)(Zoominfo)" },
-    { key: "LinkedIn (Url)", label: "LinkedIn (Url)" },
-    { key: "LinkedIn: Could Not Access", label: "LinkedIn: Could Not Access" },
+    { key: "LinkedIn Possible 1", label: "Possible LinkedIn (#1)(Grata)" },
+    { key: "LinkedIn Possible 2", label: "Possible LinkedIn (#2)(Zoominfo)" },
+    { key: "LinkedIn Url", label: "LinkedIn (Url)" },
+    { key: "LinkedIn Could Not Access", label: "LinkedIn: Could Not Access" },
     { key: "LinkedIn Company Name", label: "LinkedIn Company Name" },
     { key: "LinkedIn Overview", label: "LinkedIn Overview" },
     { key: "Linkedin Followers", label: "Linkedin Followers" },
@@ -374,14 +380,14 @@ const GROUPS: Record<
     { key: "LinkedIn State", label: "LinkedIn State" },
     { key: "LinkedIn Zip Code", label: "LinkedIn Zip Code" },
     { key: "LinkedIn Country", label: "LinkedIn Country" },
-    { key: "LinkedIn: Full Company MSA", label: "LinkedIn: Full Company MSA" },
-    { key: "LinkedIn: Company MSA", label: "LinkedIn: Company MSA" },
-    { key: "LinkedIn: Region", label: "LinkedIn: Region" },
-    { key: "LinkedIn: Notes", label: "LinkedIn: Notes" },
-    { key: "Linkedin: Unclaimed Page", label: "Linkedin: Unclaimed Page" },
+    { key: "LinkedIn Full Company MSA", label: "LinkedIn: Full Company MSA" },
+    { key: "LinkedIn Company MSA", label: "LinkedIn: Company MSA" },
+    { key: "LinkedIn Region", label: "LinkedIn: Region" },
+    { key: "LinkedIn Notes", label: "LinkedIn: Notes" },
+    { key: "Linkedin Unclaimed Page", label: "Linkedin: Unclaimed Page" },
   ],
   bbb: [
-    { key: "BBB Link (Url)", label: "BBB Link (Url)" },
+    { key: "BBB Link", label: "BBB Link (Url)" },
     { key: "BBB Company Name", label: "BBB Company Name" },
     { key: "BBB Business Started", label: "BBB Business Started" },
     { key: "BBB Type of Entity", label: "BBB Type of Entity" },
@@ -392,15 +398,15 @@ const GROUPS: Record<
     { key: "BBB State", label: "BBB State" },
     { key: "BBB Zip Code", label: "BBB Zip Code" },
     { key: "BBB Country", label: "BBB Country" },
-    { key: "BBB: Full Company MSA", label: "BBB: Full Company MSA" },
-    { key: "BBB: Company MSA", label: "BBB: Company MSA" },
-    { key: "BBB: Region", label: "BBB: Region" },
+    { key: "BBB Full Company MSA", label: "BBB: Full Company MSA" },
+    { key: "BBB Company MSA", label: "BBB: Company MSA" },
+    { key: "BBB Region", label: "BBB: Region" },
     { key: "BBB Customer Contacts", label: "BBB Customer Contacts" },
-    { key: "BBB: Notes", label: "BBB: Notes" },
+    { key: "BBB Notes", label: "BBB: Notes" },
     { key: "BBB Accredited", label: "BBB Accredited" },
   ],
   google: [
-    { key: "Google Business Page (Url)", label: "Google Business Page (Url)" },
+    { key: "Google Business Page Url", label: "Google Business Page (Url)" },
     { key: "Google Company Name", label: "Google Company Name" },
     { key: "Google Reviews", label: "Google Reviews" },
     { key: "Google Rating", label: "Google Rating" },
@@ -410,34 +416,35 @@ const GROUPS: Record<
     { key: "Google Business State", label: "Google Business State" },
     { key: "Google Business Zip Code", label: "Google Business Zip Code" },
     { key: "Google Business Country", label: "Google Business Country" },
-    { key: "Google Business: Full Company MSA", label: "Google Business: Full Company MSA" },
-    { key: "Google Business: Company MSA", label: "Google Business: Company MSA" },
-    { key: "Google Business: Region", label: "Google Business: Region" },
+    { key: "Google Business Full Company MSA", label: "Google Business: Full Company MSA" },
+    { key: "Google Business Company MSA", label: "Google Business: Company MSA" },
+    { key: "Google Business Region", label: "Google Business: Region" },
     { key: "Google Phone", label: "Google Phone" },
-    { key: "Google Business: Notes", label: "Google Business: Notes" },
+    { key: "Google Business Notes", label: "Google Business: Notes" },
   ],
   ppp: [
-    { key: "FederalPay PPP Link (Url)", label: "FederalPay PPP Link (Url)" },
+    { key: "FederalPay PPP Url", label: "FederalPay PPP Link (Url)" },
     { key: "PPP Company Name", label: "PPP Company Name" },
     { key: "PPP Jobs Retained", label: "PPP Jobs Retained" },
     { key: "PPP Total Loan Size", label: "PPP Total Loan Size" },
-    { key: "PPP Loan Size(#1)", label: "PPP Loan Size(#1)" },
-    { key: "PPP Loan Payroll Amount (#1)", label: "PPP Loan Payroll Amount (#1)" },
-    { key: "PPP Loan Size (#2)", label: "PPP Loan Size (#2)" },
-    { key: "PPP Loan Payroll Amount (#2)", label: "PPP Loan Payroll Amount (#2)" },
+    { key: "PPP Loan Size 1", label: "PPP Loan Size (#1)" },
+    { key: "PPP Loan Payroll Amount 1", label: "PPP Loan Payroll Amount (#1)" },
+    { key: "PPP Loan Size 2", label: "PPP Loan Size (#2)" },
+    { key: "PPP Loan Payroll Amount 2", label: "PPP Loan Payroll Amount (#2)" },
     { key: "PPP Address", label: "PPP Address" },
     { key: "PPP Street", label: "PPP Street" },
     { key: "PPP City", label: "PPP City" },
     { key: "PPP State", label: "PPP State" },
     { key: "PPP Zip Code", label: "PPP Zip Code" },
     { key: "PPP Country", label: "PPP Country" },
-    { key: "PPP: Full Company MSA", label: "PPP: Full Company MSA" },
-    { key: "PPP: Company MSA", label: "PPP: Company MSA" },
-    { key: "PPP: Region", label: "PPP: Region" },
+    { key: "PPP Full Company MSA", label: "PPP Full Company MSA" },
+    { key: "PPP Company MSA", label: "PPP Company MSA" },
+    { key: "PPP Region", label: "PPP Region" },
     { key: "PPP Business Demographics", label: "PPP Business Demographics" },
     { key: "PPP NAICS Code", label: "PPP NAICS Code" },
     { key: "PPP Business Owner Demographics", label: "PPP Business Owner Demographics" },
-    { key: "PPP: Notes", label: "PPP: Notes" },
+    { key: "PPP Notes", label: "PPP Notes" },
+    { key: "PPP Could Not Access", label: "PPP: Could Not Access" },
   ],
   sos: [
     { key: "SoS Company Name", label: "SoS Company Name" },
@@ -449,23 +456,23 @@ const GROUPS: Record<
     { key: "SoS Agent State", label: "SoS Agent State" },
     { key: "SoS Agent Zip Code", label: "SoS Agent Zip Code" },
     { key: "SoS Agent Country", label: "SoS Agent Country" },
-    { key: "SoS Agent: Full Company MSA", label: "SoS Agent: Full Company MSA" },
-    { key: "SoS Agent: Company MSA", label: "SoS Agent: Company MSA" },
-    { key: "SoS Agent: Region", label: "SoS Agent: Region" },
+    { key: "SoS Agent Full Company MSA", label: "SoS Agent: Full Company MSA" },
+    { key: "SoS Agent Company MSA", label: "SoS Agent: Company MSA" },
+    { key: "SoS Agent Region", label: "SoS Agent: Region" },
     { key: "SoS Principal Address", label: "SoS Principal Address" },
     { key: "SoS Principal Street", label: "SoS Principal Street" },
     { key: "SoS Principal City", label: "SoS Principal City" },
     { key: "SoS Principal State", label: "SoS Principal State" },
     { key: "SoS Principal Zip Code", label: "SoS Principal Zip Code" },
     { key: "SoS Principal Country", label: "SoS Principal Country" },
-    { key: "SoS Principal: Full Company MSA", label: "SoS Principal: Full Company MSA" },
-    { key: "SoS Principal: Company MSA", label: "SoS Principal: Company MSA" },
-    { key: "SoS Principal: Region", label: "SoS Principal: Region" },
+    { key: "SoS Principal Full Company MSA", label: "SoS Principal: Full Company MSA" },
+    { key: "SoS Principal Company MSA", label: "SoS Principal: Company MSA" },
+    { key: "SoS Principal Region", label: "SoS Principal: Region" },
     { key: "SoS Registered Agent", label: "SoS Registered Agent" },
     { key: "SoS Officers", label: "SoS Officers" },
     { key: "SoS Year Founded", label: "SoS Year Founded" },
-    { key: "SoS: Notes", label: "SoS: Notes" },
-    { key: "Secretary of State: Could Not Access", label: "Secretary of State: Could Not Access" },
+    { key: "SoS Notes", label: "SoS: Notes" },
+    { key: "Secretary of State Could Not Access", label: "Secretary of State: Could Not Access" },
   ],
   source: [
     { key: "Location Primary", label: "Location Primary" },
@@ -486,40 +493,44 @@ function FieldGrid({
   data: CompanyData;
   fields: FieldDef[];
 }) {
+  const role = useRole();
+  const hiddenFields = permissions[role].hiddenFields;
+
   // Case-insensitive safe getter (your sheet headings can vary)
   const get = (k: string) => {
     if (k in data) return data[k];
-    // try case-insensitive
     const hit = Object.keys(data).find((kk) => kk.toLowerCase() === k.toLowerCase());
     return hit ? data[hit] : undefined;
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {fields.map(({ key, label }) => {
-        const val = get(key);
-        const display =
-          val === null || val === undefined || String(val).trim() === "" ? "—" : String(val);
-        const isUrl = typeof val === "string" && /^https?:\/\//i.test(val);
+      {fields
+        .filter(({ label }) => !hiddenFields.includes(label)) // ✅ Hide restricted fields
+        .map(({ key, label }) => {
+          const val = get(key);
+          const display =
+            val === null || val === undefined || String(val).trim() === "" ? "—" : String(val);
+          const isUrl = typeof val === "string" && /^https?:\/\//i.test(val);
 
-        return (
-          <div key={key}>
-            <p className="text-sm font-medium text-gray-500">{label}</p>
-            {isUrl ? (
-              <a
-                href={val as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
-              >
-                {val as string}
-              </a>
-            ) : (
-              <p className="break-words">{display}</p>
-            )}
-          </div>
-        );
-      })}
+          return (
+            <div key={key}>
+              <p className="text-sm font-medium text-gray-500">{label}</p>
+              {isUrl ? (
+                <a
+                  href={val as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline break-all"
+                >
+                  {val as string}
+                </a>
+              ) : (
+                <p className="break-words">{display}</p>
+              )}
+            </div>
+          );
+        })}
     </div>
   );
 }
@@ -527,6 +538,8 @@ function FieldGrid({
 // =================== PAGE ===================
 export default function CompanyDetailPage() {
   const router = useRouter();
+  const role = useRole();
+  const hiddenFields = permissions[role].hiddenFields;
   const params = useParams() as { id?: string[] | string };
   const id = Array.isArray(params?.id) ? params?.id[0] : params?.id;
 
@@ -646,14 +659,22 @@ export default function CompanyDetailPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="details">Details (Account Info)</TabsTrigger>
-          <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-          <TabsTrigger value="bbb">BBB</TabsTrigger>
-          <TabsTrigger value="google">Google Business</TabsTrigger>
-          <TabsTrigger value="ppp">PPP</TabsTrigger>
-          <TabsTrigger value="sos">SoS</TabsTrigger>
-          <TabsTrigger value="source">Source Info</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          {[
+            { id: "details", label: "Details (Account Info)" },
+            { id: "linkedin", label: "LinkedIn" },
+            { id: "bbb", label: "BBB" },
+            { id: "google", label: "Google Business" },
+            { id: "ppp", label: "PPP" },
+            { id: "sos", label: "SoS" },
+            { id: "source", label: "Source Info" },
+            { id: "documents", label: "Documents" },
+          ]
+            // ✅ Don’t hide entire tabs — let FieldGrid handle restrictions internally
+            .map((t) => (
+              <TabsTrigger key={t.id} value={t.id}>
+                {t.label}
+              </TabsTrigger>
+            ))}
         </TabsList>
 
         {/* Details */}

@@ -1,12 +1,13 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/context/auth-context"
-import ProtectedRoute from "@/components/ProtectedRoute"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/context/auth-context";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { RoleProvider } from "@/context/role-context"; // ✅ added
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MySage - InputHub",
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
   icons: {
     icon: "/images/p.png",
   },
-    generator: 'v0.dev'
-}
+  generator: "v0.dev",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,13 +24,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
-            <ProtectedRoute>{children}</ProtectedRoute>
+            <RoleProvider> {/* ✅ new context wrapper */}
+              <ProtectedRoute>{children}</ProtectedRoute>
+            </RoleProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 
-
-import './globals.css'
+import "./globals.css";

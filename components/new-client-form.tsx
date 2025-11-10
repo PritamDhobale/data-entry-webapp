@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { useRole } from "@/context/role-context";
+import { permissions } from "@/context/permissions";
 import {
   Dialog,
   DialogContent,
@@ -103,6 +105,10 @@ const FIELDS_BY_SECTION: Record<
   details: [
     { label: "Account Name", name: "account_name" },
     { label: "Website", name: "website" },
+    { label: "Annual Revenue", name: "annual_revenue" },
+    { label: "Email", name: "email" },
+    { label: "Contact on Website", name: "contact_on_website" },
+    { label: "Title", name: "title" },
     { label: "Website Company Name", name: "website_company_name" },
     { label: "Website Company Name Abbreviated", name: "website_company_name_abbreviated" },
     { label: "Website Address", name: "website_address" },
@@ -332,6 +338,8 @@ function normalizeHeader(h: string): string {
 type FormDataState = Record<string, string>;
 
 export function NewClientForm() {
+  const role = useRole();
+  const hiddenFields = permissions[role].hiddenFields;
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<(typeof TAB_ORDER)[number]["id"]>("details");
   const [saving, setSaving] = useState(false);
@@ -355,45 +363,60 @@ export function NewClientForm() {
     const msa = await fetchMsa(value);
 
     if (zipInfo) {
-  if (name.includes("website")) {
-    setForm((p) => ({
-      ...p,
-      website_city: zipInfo.city,
-      website_state: zipInfo.state,
-      website_full_company_msa: msa,
-      website_company_msa: msa,
-    }));
-  } else if (name.includes("linkedin")) {
-    setForm((p) => ({
-      ...p,
-      linkedin_city: zipInfo.city,
-      linkedin_state: zipInfo.state,
-      linkedin_full_company_msa: msa,
-      linkedin_company_msa: msa,
-    }));
-  } else if (name.includes("ppp")) {
-    setForm((p) => ({
-      ...p,
-      ppp_city: zipInfo.city,
-      ppp_state: zipInfo.state,
-      ppp_full_company_msa: msa,
-      ppp_company_msa: msa,
-    }));
-  } else if (name.includes("sos") || name.includes("principal")) {
-    // ✅ New: handles SoS Principal fields
-    setForm((p) => ({
-      ...p,
-      sos_principal_city: zipInfo.city,
-      sos_principal_state: zipInfo.state,
-      sos_principal_full_company_msa: msa,
-      sos_principal_company_msa: msa,
-    }));
+      if (name.includes("website")) {
+        setForm((p) => ({
+          ...p,
+          website_city: zipInfo.city,
+          website_state: zipInfo.state,
+          website_full_company_msa: msa,
+          website_company_msa: msa,
+        }));
+      } else if (name.includes("linkedin")) {
+        setForm((p) => ({
+          ...p,
+          linkedin_city: zipInfo.city,
+          linkedin_state: zipInfo.state,
+          linkedin_full_company_msa: msa,
+          linkedin_company_msa: msa,
+        }));
+      } else if (name.includes("ppp")) {
+        setForm((p) => ({
+          ...p,
+          ppp_city: zipInfo.city,
+          ppp_state: zipInfo.state,
+          ppp_full_company_msa: msa,
+          ppp_company_msa: msa,
+        }));
+      } else if (name.includes("bbb")) {
+        // ✅ NEW: BBB Auto-Fill
+        setForm((p) => ({
+          ...p,
+          bbb_city: zipInfo.city,
+          bbb_state: zipInfo.state,
+          bbb_full_company_msa: msa,
+          bbb_company_msa: msa,
+        }));
+      } else if (name.includes("google_business")) {
+        // ✅ NEW: Google Business Auto-Fill
+        setForm((p) => ({
+          ...p,
+          google_business_city: zipInfo.city,
+          google_business_state: zipInfo.state,
+          google_business_full_company_msa: msa,
+          google_business_company_msa: msa,
+        }));
+      } else if (name.includes("sos") || name.includes("principal")) {
+        setForm((p) => ({
+          ...p,
+          sos_principal_city: zipInfo.city,
+          sos_principal_state: zipInfo.state,
+          sos_principal_full_company_msa: msa,
+          sos_principal_company_msa: msa,
+        }));
+      }
+    }
   }
-}
-
-  }
-};
-
+  };
 
   const downloadTemplate = () => {
     const csv = ALL_KEYS.join(",") + "\n";
@@ -587,70 +610,71 @@ export function NewClientForm() {
           {TAB_ORDER.filter((t) => String(t.id) !== "documents").map((t) => (
   <TabsContent key={t.id} value={t.id as string} className="mt-4">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {FIELDS_BY_SECTION[t.id as keyof typeof FIELDS_BY_SECTION].map(({ label, name }) => {
-        const type = guessType(label, name);
+      {FIELDS_BY_SECTION[t.id as keyof typeof FIELDS_BY_SECTION]
+        .filter(({ label }) => !hiddenFields.includes(label)) // ✅ Hide restricted fields by label
+        .map(({ label, name }) => {
+          const type = guessType(label, name);
 
-        return (
-          <div key={name} className="space-y-2">
-            <Label htmlFor={name}>{label}</Label>
+          return (
+            <div key={name} className="space-y-2">
+              <Label htmlFor={name}>{label}</Label>
 
-            {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
-            {name.includes("could_not_access") ? (
-              <select
-                id={name}
-                value={form[name] || "false"}
-                onChange={(e) => setValue(name, e.target.value)}
-                className="border rounded-md p-2 w-full"
-              >
-                <option value="false">False</option>
-                <option value="true">True</option>
-              </select>
-            ) : 
-            /* ✅ 2. Handle textarea fields normally */ 
-            type === "textarea" ? (
-              <Textarea
-                id={name}
-                value={form[name] || ""}
-                onChange={(e) => setValue(name, e.target.value)}
-                className="min-h-[92px]"
-                placeholder={label}
-              />
-            ) : 
-            /* ✅ 3. Add a clickable Website link (still editable) */ 
-            name === "website" ? (
-              <div>
+              {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
+              {name.includes("could_not_access") ? (
+                <select
+                  id={name}
+                  value={form[name] || "false"}
+                  onChange={(e) => setValue(name, e.target.value)}
+                  className="border rounded-md p-2 w-full"
+                >
+                  <option value="false">False</option>
+                  <option value="true">True</option>
+                </select>
+              ) : type === "textarea" ? (
+                /* ✅ 2. Handle textarea fields normally */
+                <Textarea
+                  id={name}
+                  value={form[name] || ""}
+                  onChange={(e) => setValue(name, e.target.value)}
+                  className="min-h-[92px]"
+                  placeholder={label}
+                />
+              ) : name === "website" ? (
+                /* ✅ 3. Add clickable website link */
+                <div>
+                  <Input
+                    id={name}
+                    type="text"
+                    value={form[name] || ""}
+                    onChange={(e) => setValue(name, e.target.value)}
+                    placeholder={label}
+                  />
+                  {form[name] && (
+                    <a
+                      href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline text-sm"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              ) : (
+                /* ✅ 4. Default input */
                 <Input
                   id={name}
-                  type="text"
+                  type={type === "number" ? "text" : type}
+                  inputMode={type === "number" ? "numeric" : undefined}
                   value={form[name] || ""}
                   onChange={(e) => setValue(name, e.target.value)}
                   placeholder={label}
+                  disabled={hiddenFields.includes(label)} // ✅ If you prefer to gray out instead of hide
                 />
-                {form[name] && (
-                  <a
-                    href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline text-sm"
-                  >
-                    Visit Website
-                  </a>
-                )}
-              </div>
-            ) : (
-              /* ✅ 4. All other fields default */
-              <Input
-                id={name}
-                type={type === "number" ? "text" : type}
-                inputMode={type === "number" ? "numeric" : undefined}
-                value={form[name] || ""}
-                onChange={(e) => setValue(name, e.target.value)}
-                placeholder={label}
-              />
-            )}
-          </div>
-        );
-      })}
+              )}
+            </div>
+          );
+        })}
     </div>
   </TabsContent>
 ))}

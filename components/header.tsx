@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/context/auth-context"
 import { Notifications } from "@/components/notifications"
+import { useRole } from "@/context/role-context";
 
 export default function Header() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const { user, logout } = useAuth()
+  const role = useRole();
   const router = useRouter()
 
   useEffect(() => {
@@ -50,41 +52,11 @@ export default function Header() {
 
       <div className="flex items-center space-x-4">
         <Notifications />
-        
 
-
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center text-sm font-medium text-gray-700 hover:text-primary">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary mr-2 relative overflow-hidden">
-                <Image
-                  src="/images/sage_healthy_rcm_logo.png"
-                  alt="Sage Healthy Logo"
-                  fill
-                  style={{ objectFit: "contain", padding: "1px" }}
-                />
-              </div>
-              <span>{user?.name || "Admin"}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigateTo("/profile")} className="cursor-pointer">
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigateTo("/settings")} className="cursor-pointer">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
+        {/* ✅ Role indicator */}
+        <div className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-md border border-gray-300 shadow-sm">
+          Role: <span className="font-semibold">{role}</span>
+        </div>
       </div>
     </header>
   )
