@@ -20,7 +20,16 @@ export const permissions: PermissionMap = {
     canEdit: true,
     canDelete: true,
     canAdd: true,
-    hiddenFields: [], // Admin sees all
+    hiddenFields: [
+      "Website Designations",
+      "PPP Business Demographics",
+      "PPP NAICS Code",
+      "PPP Business Owner Demographics",
+      "LinkedIn Overview",
+      "LinkedIn Followers",
+      "BBB Type of Entity",
+      "SoS Filing Type",
+    ],
   },
   Reviewer: {
     canViewDashboard: true,
@@ -29,7 +38,16 @@ export const permissions: PermissionMap = {
     canEdit: true,
     canDelete: false,
     canAdd: true,
-    hiddenFields: [], // Same as Admin for now
+    hiddenFields: [
+      "Website Designations",
+      "PPP Business Demographics",
+      "PPP NAICS Code",
+      "PPP Business Owner Demographics",
+      "LinkedIn Overview",
+      "LinkedIn Followers",
+      "BBB Type of Entity",
+      "SoS Filing Type",
+    ],
   },
   DataEntry: {
     canViewDashboard: true,

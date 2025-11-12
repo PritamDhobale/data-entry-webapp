@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { TopStatesChart } from "@/components/top-states-chart";
+import { TopIndustriesChart } from "@/components/top-industries-chart";
 import {
   Card,
   CardContent,
@@ -197,29 +199,28 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[#000000]">
-              Top States by Company Count
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DashboardChart />
-          </CardContent>
-        </Card>
+{/* Charts Section */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-[#000000]">Top States by Company Count</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <TopStatesChart />
+    </CardContent>
+  </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[#000000]">
-              Top Industries by Company Count
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DashboardChart />
-          </CardContent>
-        </Card>
-      </div>
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-[#000000]">Top Industries by Company Count</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <TopIndustriesChart />
+    </CardContent>
+  </Card>
+</div>
+
+
 
       {/* Recent Companies Table */}
       <Card>

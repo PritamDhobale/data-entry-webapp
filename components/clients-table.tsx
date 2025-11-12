@@ -122,9 +122,9 @@ export function ClientsTable() {
                   </TableCell> */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-  <Button size="icon" variant="outline" onClick={() => router.push(`/clients/${client.id}`)}>
+  {/* <Button size="icon" variant="outline" onClick={() => router.push(`/clients/${client.id}`)}>
     <Eye className="h-4 w-4" />
-  </Button>
+  </Button> */}
 
   <Button
     size="icon"

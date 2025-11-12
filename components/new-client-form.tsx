@@ -334,6 +334,22 @@ function normalizeHeader(h: string): string {
   return keyLike; // fallback (keeps data, even if unexpected)
 }
 
+/** Instruction text per section (from Excel “Instructions” tab) */
+  const INSTRUCTIONS: Record<string, string> = {
+    details:
+      "Transcribe exactly what the source shows. Don’t infer or “fix” anything. Use the address and phone of the primary HQ location.",
+    linkedin:
+      "Transcribe exactly what the source shows. Don’t infer or “fix” anything. Use web searches or link on target website to access. Confirm company LinkedIn based on address and logo compared to the website.",
+    bbb:
+      "Transcribe exactly what the source shows. Don’t infer or “fix” anything. Use web searches or link on target website to access. Confirm BBB based on address compared to the website.",
+    google_business:
+      "Transcribe exactly what the source shows. Don’t infer or “fix” anything. Google search for the target company. Confirm Google Business based off of link to website and address.",
+    ppp:
+      "Search the PPP database based off of target company name. If that fails, try a search based on zip code.",
+    sos:
+      "Transcribe exactly what the source shows. Don’t infer or “fix” anything. Open SoS website based off of target State. Search for company using company name, or variations of the company name.",
+  };
+
 /* --------------------------------- UI ----------------------------------- */
 type FormDataState = Record<string, string>;
 
@@ -419,12 +435,7 @@ export function NewClientForm() {
   };
 
   const downloadTemplate = () => {
-    const csv = ALL_KEYS.join(",") + "\n";
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "client_template.csv";
-    a.click();
+    window.open("/api/template/download", "_blank");
   };
 
   const onUploadCSV: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -580,14 +591,81 @@ export function NewClientForm() {
             Download CSV Template
           </Button>
 
+          {/* 🧩 Bulk Upload CSV for multiple companies */}
           <label
-            className="px-4 py-2 rounded-md text-sm font-medium cursor-pointer text-white"
+            className={`px-4 py-2 rounded-md text-sm font-medium cursor-pointer text-white ${
+              saving ? "opacity-50 pointer-events-none" : ""
+            }`}
             style={{ backgroundColor: BRAND.primary }}
-            onMouseEnter={(e) => ((e.currentTarget.style.backgroundColor = BRAND.primaryHover))}
-            onMouseLeave={(e) => ((e.currentTarget.style.backgroundColor = BRAND.primary))}
+            onMouseEnter={(e) => {
+              if (!saving) e.currentTarget.style.backgroundColor = BRAND.primaryHover;
+            }}
+            onMouseLeave={(e) => {
+              if (!saving) e.currentTarget.style.backgroundColor = BRAND.primary;
+            }}
           >
-            Upload CSV
-            <input type="file" accept=".csv" onChange={onUploadCSV} className="hidden" />
+            {saving ? "Uploading..." : "Bulk Upload CSV"}
+            <input
+              type="file"
+              accept=".csv"
+              disabled={saving}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                setSaving(true); // ✅ Lock upload button during processing
+
+                try {
+                  // 🧠 CSV header validation before upload
+                  const text = await file.text();
+                  const [headerLine] = text.split(/\r?\n/);
+                  const headers = headerLine.split(",").map((h) => h.trim().toLowerCase());
+
+                  const missingColumns = ALL_KEYS.filter(
+                    (k) => !headers.includes(k.toLowerCase())
+                  );
+
+                  if (missingColumns.length > 0) {
+                    alert(
+                      `⚠️ The CSV is missing required columns:\n${missingColumns
+                        .slice(0, 10)
+                        .join(", ")}${missingColumns.length > 10 ? "..." : ""}`
+                    );
+                    return; // ⛔ Stop upload if template is invalid
+                  }
+
+                  // ✅ If valid, continue upload
+                  const fd = new FormData();
+                  fd.append("file", file);
+
+                  const res = await fetch("/api/clients/bulk-add", {
+                    method: "POST",
+                    body: fd,
+                  });
+                  const json = await res.json();
+
+                  if (json.success) {
+                    const summary = json.failedRows
+                      ?.map((r: any) => `Row ${r.row}: ${r.error}`)
+                      .join("\n");
+                    alert(
+                      `✅ ${json.inserted} companies added successfully.\n❌ ${
+                        json.failed
+                      } failed.\n\n${summary ? "Errors:\n" + summary : ""}`
+                    );
+                  } else {
+                    alert(`❌ Error: ${json.error}`);
+                  }
+                } catch (err) {
+                  console.error("Bulk upload failed:", err);
+                  alert("Bulk upload failed. Check console for details.");
+                } finally {
+                  setSaving(false); // ✅ Unlock upload button once complete
+                  e.target.value = ""; // optional: reset input for re-upload
+                }
+              }}
+              className="hidden"
+            />
           </label>
         </div>
 
@@ -608,78 +686,82 @@ export function NewClientForm() {
           </TabsList>
 
           {TAB_ORDER.filter((t) => String(t.id) !== "documents").map((t) => (
-  <TabsContent key={t.id} value={t.id as string} className="mt-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {FIELDS_BY_SECTION[t.id as keyof typeof FIELDS_BY_SECTION]
-        .filter(({ label }) => !hiddenFields.includes(label)) // ✅ Hide restricted fields by label
-        .map(({ label, name }) => {
-          const type = guessType(label, name);
+          <TabsContent key={t.id} value={t.id as string} className="mt-4">
+            {/* 🧭 Instruction banner below each section */}
+            {INSTRUCTIONS[t.id] && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-md p-3 mb-4">
+                <strong>Instruction:</strong> {INSTRUCTIONS[t.id]}
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {FIELDS_BY_SECTION[t.id as keyof typeof FIELDS_BY_SECTION]
+                .filter(({ label }) => !hiddenFields.includes(label)) // ✅ Hide restricted fields by label
+                .map(({ label, name }) => {
+                  const type = guessType(label, name);
 
-          return (
-            <div key={name} className="space-y-2">
-              <Label htmlFor={name}>{label}</Label>
+                  return (
+                    <div key={name} className="space-y-2">
+                      <Label htmlFor={name}>{label}</Label>
 
-              {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
-              {name.includes("could_not_access") ? (
-                <select
-                  id={name}
-                  value={form[name] || "false"}
-                  onChange={(e) => setValue(name, e.target.value)}
-                  className="border rounded-md p-2 w-full"
-                >
-                  <option value="false">False</option>
-                  <option value="true">True</option>
-                </select>
-              ) : type === "textarea" ? (
-                /* ✅ 2. Handle textarea fields normally */
-                <Textarea
-                  id={name}
-                  value={form[name] || ""}
-                  onChange={(e) => setValue(name, e.target.value)}
-                  className="min-h-[92px]"
-                  placeholder={label}
-                />
-              ) : name === "website" ? (
-                /* ✅ 3. Add clickable website link */
-                <div>
-                  <Input
-                    id={name}
-                    type="text"
-                    value={form[name] || ""}
-                    onChange={(e) => setValue(name, e.target.value)}
-                    placeholder={label}
-                  />
-                  {form[name] && (
-                    <a
-                      href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline text-sm"
-                    >
-                      Visit Website
-                    </a>
-                  )}
-                </div>
-              ) : (
-                /* ✅ 4. Default input */
-                <Input
-                  id={name}
-                  type={type === "number" ? "text" : type}
-                  inputMode={type === "number" ? "numeric" : undefined}
-                  value={form[name] || ""}
-                  onChange={(e) => setValue(name, e.target.value)}
-                  placeholder={label}
-                  disabled={hiddenFields.includes(label)} // ✅ If you prefer to gray out instead of hide
-                />
-              )}
+                      {/* ✅ 1. Handle "Could Not Access" fields as True/False picklists */}
+                      {name.includes("could_not_access") ? (
+                        <select
+                          id={name}
+                          value={form[name] || "false"}
+                          onChange={(e) => setValue(name, e.target.value)}
+                          className="border rounded-md p-2 w-full"
+                        >
+                          <option value="false">False</option>
+                          <option value="true">True</option>
+                        </select>
+                      ) : type === "textarea" ? (
+                        /* ✅ 2. Handle textarea fields normally */
+                        <Textarea
+                          id={name}
+                          value={form[name] || ""}
+                          onChange={(e) => setValue(name, e.target.value)}
+                          className="min-h-[92px]"
+                          placeholder={label}
+                        />
+                      ) : name === "website" ? (
+                        /* ✅ 3. Add clickable website link */
+                        <div>
+                          <Input
+                            id={name}
+                            type="text"
+                            value={form[name] || ""}
+                            onChange={(e) => setValue(name, e.target.value)}
+                            placeholder={label}
+                          />
+                          {form[name] && (
+                            <a
+                              href={form[name].startsWith("http") ? form[name] : `https://${form[name]}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline text-sm"
+                            >
+                              Visit Website
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        /* ✅ 4. Default input */
+                        <Input
+                          id={name}
+                          type={type === "number" ? "text" : type}
+                          inputMode={type === "number" ? "numeric" : undefined}
+                          value={form[name] || ""}
+                          onChange={(e) => setValue(name, e.target.value)}
+                          placeholder={label}
+                          disabled={hiddenFields.includes(label)} // ✅ If you prefer to gray out instead of hide
+                        />
+                      )}
+                    </div>
+                  );
+                })}
             </div>
-          );
-        })}
-    </div>
-  </TabsContent>
-))}
-
-
+          </TabsContent>
+          ))}
         </Tabs>
 
         <DialogFooter className="mt-4">
