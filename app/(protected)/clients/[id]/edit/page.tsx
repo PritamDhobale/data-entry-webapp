@@ -23,6 +23,10 @@ const GROUPS: Record<
 > = {
   details: [
     { key: "Account Name", label: "Account Name" },
+    { key: "Title", label: "Title" },
+    { key: "Annual Revenue", label: "Annual Revenue" },
+    { key: "Email", label: "Email" },
+    { key: "Contact on Website", label: "Contact on Website" },
     { key: "Website", label: "Website" },
     { key: "Website Company Name", label: "Website Company Name" },
     { key: "Website Company Name Abbreviated", label: "Website Company Name Abbreviated" },
@@ -71,6 +75,7 @@ const GROUPS: Record<
     { key: "LinkedIn: Notes", label: "LinkedIn: Notes", type: "textarea" },
     { key: "LinkedIn Unclaimed Page", label: "LinkedIn Unclaimed Page" },
     { key: "LinkedIn: Could Not Access", label: "LinkedIn: Could Not Access" },
+    { key: "LinkedIn Region", label: "LinkedIn Region" },
   ],
   bbb: [
     { key: "BBB Link (Url)", label: "BBB Link (Url)" },
