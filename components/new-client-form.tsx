@@ -107,7 +107,7 @@ const FIELDS_BY_SECTION: Record<
     { label: "Website", name: "website" },
     { label: "Annual Revenue", name: "annual_revenue" },
     { label: "Email", name: "email" },
-    { label: "Contact on Website", name: "contact_on_website" },
+    // { label: "Contact on Website", name: "contact_on_website" },
     { label: "Title", name: "title" },
     { label: "Website Company Name", name: "website_company_name" },
     { label: "Website Company Name Abbreviated", name: "website_company_name_abbreviated" },
