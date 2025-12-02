@@ -302,22 +302,36 @@ const ALL_KEYS: string[] = Object.values(FIELDS_BY_SECTION)
 
 /* ------------------------------- HELPERS -------------------------------- */
 /** Best-effort input type inference based on the label/name */
-function guessType(label: string, name: string): "text" | "email" | "url" | "number" | "textarea" {
+// function guessType(label: string, name: string): "text" | "email" | "url" | "number" | "textarea" {
+//   const l = `${label} ${name}`.toLowerCase();
+//   if (l.includes("email")) return "email";
+//   if (l.includes("url") || l.includes("http") || l.includes("link")) return "url";
+//   if (
+//     l.includes("zip") ||
+//     l.includes("num") ||
+//     l.includes("jobs retained") ||
+//     l.includes("year founded") ||
+//     l.includes("employees") ||
+//     l.includes("loan size") ||
+//     l.includes("payroll")
+//   ) {
+//     return "number";
+//   }
+//   if (l.includes("notes")) return "textarea";
+//   return "text";
+// }
+
+function guessType(label: string, name: string): "text" | "email" | "url" | "textarea" {
   const l = `${label} ${name}`.toLowerCase();
+
   if (l.includes("email")) return "email";
   if (l.includes("url") || l.includes("http") || l.includes("link")) return "url";
-  if (
-    l.includes("zip") ||
-    l.includes("num") ||
-    l.includes("jobs retained") ||
-    l.includes("year founded") ||
-    l.includes("employees") ||
-    l.includes("loan size") ||
-    l.includes("payroll")
-  ) {
-    return "number";
-  }
+
+  // 🚨 ZIP CODES MUST ALWAYS BE TEXT (Never numeric!)
+  if (l.includes("zip")) return "text";
+
   if (l.includes("notes")) return "textarea";
+
   return "text";
 }
 
@@ -375,9 +389,16 @@ export function NewClientForm() {
 
   // --- ZIP Code Auto-Fill Logic ---
   if (name.endsWith("zip_code") && value.length === 5 && /^[0-9]{5}$/.test(value)) {
-    const zipInfo = await fetchZipInfo(value);
-    const msa = await fetchMsa(value);
+    // ⭐ 1. Remove leading zeros for MSA DB lookup
+    const normalizedZip = value.replace(/^0+/, "") || value;
 
+    // ⭐ 2. Fetch city/state from Zippopotam using REAL ZIP (with zeros)
+    const zipInfo = await fetchZipInfo(value);
+
+    // ⭐ 3. Fetch MSA using normalized ZIP (without leading zeros)
+    const msa = await fetchMsa(normalizedZip);
+
+    // ⭐ 4. Auto-fill logic stays same
     if (zipInfo) {
       if (name.includes("website")) {
         setForm((p) => ({
@@ -404,7 +425,6 @@ export function NewClientForm() {
           ppp_company_msa: msa,
         }));
       } else if (name.includes("bbb")) {
-        // ✅ NEW: BBB Auto-Fill
         setForm((p) => ({
           ...p,
           bbb_city: zipInfo.city,
@@ -413,7 +433,6 @@ export function NewClientForm() {
           bbb_company_msa: msa,
         }));
       } else if (name.includes("google_business")) {
-        // ✅ NEW: Google Business Auto-Fill
         setForm((p) => ({
           ...p,
           google_business_city: zipInfo.city,
@@ -431,7 +450,66 @@ export function NewClientForm() {
         }));
       }
     }
-  }
+}
+
+  // if (name.endsWith("zip_code") && value.length === 5 && /^[0-9]{5}$/.test(value)) {
+  //   const zipInfo = await fetchZipInfo(value);
+  //   const msa = await fetchMsa(value);
+
+  //   if (zipInfo) {
+  //     if (name.includes("website")) {
+  //       setForm((p) => ({
+  //         ...p,
+  //         website_city: zipInfo.city,
+  //         website_state: zipInfo.state,
+  //         website_full_company_msa: msa,
+  //         website_company_msa: msa,
+  //       }));
+  //     } else if (name.includes("linkedin")) {
+  //       setForm((p) => ({
+  //         ...p,
+  //         linkedin_city: zipInfo.city,
+  //         linkedin_state: zipInfo.state,
+  //         linkedin_full_company_msa: msa,
+  //         linkedin_company_msa: msa,
+  //       }));
+  //     } else if (name.includes("ppp")) {
+  //       setForm((p) => ({
+  //         ...p,
+  //         ppp_city: zipInfo.city,
+  //         ppp_state: zipInfo.state,
+  //         ppp_full_company_msa: msa,
+  //         ppp_company_msa: msa,
+  //       }));
+  //     } else if (name.includes("bbb")) {
+  //       // ✅ NEW: BBB Auto-Fill
+  //       setForm((p) => ({
+  //         ...p,
+  //         bbb_city: zipInfo.city,
+  //         bbb_state: zipInfo.state,
+  //         bbb_full_company_msa: msa,
+  //         bbb_company_msa: msa,
+  //       }));
+  //     } else if (name.includes("google_business")) {
+  //       // ✅ NEW: Google Business Auto-Fill
+  //       setForm((p) => ({
+  //         ...p,
+  //         google_business_city: zipInfo.city,
+  //         google_business_state: zipInfo.state,
+  //         google_business_full_company_msa: msa,
+  //         google_business_company_msa: msa,
+  //       }));
+  //     } else if (name.includes("sos") || name.includes("principal")) {
+  //       setForm((p) => ({
+  //         ...p,
+  //         sos_principal_city: zipInfo.city,
+  //         sos_principal_state: zipInfo.state,
+  //         sos_principal_full_company_msa: msa,
+  //         sos_principal_company_msa: msa,
+  //       }));
+  //     }
+  //   }
+  // }
   };
 
   const downloadTemplate = () => {
@@ -748,13 +826,22 @@ export function NewClientForm() {
                         /* ✅ 4. Default input */
                         <Input
                           id={name}
-                          type={type === "number" ? "text" : type}
-                          inputMode={type === "number" ? "numeric" : undefined}
+                          type={type}                 // "text" | "url" | "email" | "textarea"
+                          inputMode="text"            // always treat input as text (safe for ZIP)
                           value={form[name] || ""}
                           onChange={(e) => setValue(name, e.target.value)}
                           placeholder={label}
-                          disabled={hiddenFields.includes(label)} // ✅ If you prefer to gray out instead of hide
+                          disabled={hiddenFields.includes(label)}
                         />
+                        // <Input
+                        //   id={name}
+                        //   type={type === "number" ? "text" : type}
+                        //   inputMode={type === "number" ? "numeric" : undefined}
+                        //   value={form[name] || ""}
+                        //   onChange={(e) => setValue(name, e.target.value)}
+                        //   placeholder={label}
+                        //   disabled={hiddenFields.includes(label)} // ✅ If you prefer to gray out instead of hide
+                        // />
                       )}
                     </div>
                   );

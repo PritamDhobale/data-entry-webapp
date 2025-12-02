@@ -221,16 +221,22 @@ async function fetchZipInfo(zip: string) {
 }
 
 async function fetchMsa(zip: string): Promise<string> {
-  if (ZIP_CACHE[zip]?.msa) return ZIP_CACHE[zip].msa!;
+  // ⭐ Normalize ZIP for database — remove leading zeros
+  const normalizedZip = zip.replace(/^0+/, "") || zip;
+
+  if (ZIP_CACHE[normalizedZip]?.msa) {
+    return ZIP_CACHE[normalizedZip].msa!;
+  }
 
   try {
-    const res = await fetch(`/api/msa?zip=${zip}`);
+    const res = await fetch(`/api/msa?zip=${normalizedZip}`);
     if (!res.ok) return "";
 
     const data = await res.json();
     const msa = data.msa || "";
 
-    ZIP_CACHE[zip] = { ...(ZIP_CACHE[zip] || {}), msa };
+    ZIP_CACHE[normalizedZip] = { ...(ZIP_CACHE[normalizedZip] || {}), msa };
+
     return msa;
   } catch {
     return "";
@@ -244,10 +250,12 @@ function isValidZip(zip: string) {
 async function autoFillZip(prefix: string, zip: string, setData: any, setDirty: any) {
   if (!isValidZip(zip)) return;
 
-  const zipInfo = await fetchZipInfo(zip);
+  const zipInfo = await fetchZipInfo(zip); // keep original ZIP for Zippopotam
   if (!zipInfo) return;
 
-  const msa = await fetchMsa(zip);
+  // ⭐ Normalize ZIP for MSA lookup
+  const normalizedZip = zip.replace(/^0+/, "") || zip;
+  const msa = await fetchMsa(normalizedZip);
 
   setData((prev: any) => ({
     ...prev,
@@ -259,6 +267,7 @@ async function autoFillZip(prefix: string, zip: string, setData: any, setDirty: 
 
   setDirty(true);
 }
+
 
 
 // ---------- COMPONENT ----------
