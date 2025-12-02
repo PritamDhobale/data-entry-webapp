@@ -199,6 +199,67 @@ const getValue = (data: any, key: string) => {
   return found ? data[found] : "";
 };
 
+const ZIP_CACHE: Record<string, { city: string; state: string; msa?: string }> = {};
+
+async function fetchZipInfo(zip: string) {
+  if (ZIP_CACHE[zip]) return ZIP_CACHE[zip];
+
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const place = data.places?.[0];
+    const city = place?.["place name"] || "";
+    const state = place?.["state"] || "";
+
+    ZIP_CACHE[zip] = { city, state };
+    return ZIP_CACHE[zip];
+  } catch {
+    return null;
+  }
+}
+
+async function fetchMsa(zip: string): Promise<string> {
+  if (ZIP_CACHE[zip]?.msa) return ZIP_CACHE[zip].msa!;
+
+  try {
+    const res = await fetch(`/api/msa?zip=${zip}`);
+    if (!res.ok) return "";
+
+    const data = await res.json();
+    const msa = data.msa || "";
+
+    ZIP_CACHE[zip] = { ...(ZIP_CACHE[zip] || {}), msa };
+    return msa;
+  } catch {
+    return "";
+  }
+}
+
+function isValidZip(zip: string) {
+  return /^[0-9]{5}$/.test(zip) && zip !== "11111" && zip !== "00000" && zip !== "99999";
+}
+
+async function autoFillZip(prefix: string, zip: string, setData: any, setDirty: any) {
+  if (!isValidZip(zip)) return;
+
+  const zipInfo = await fetchZipInfo(zip);
+  if (!zipInfo) return;
+
+  const msa = await fetchMsa(zip);
+
+  setData((prev: any) => ({
+    ...prev,
+    [`${prefix} City`]: zipInfo.city,
+    [`${prefix} State`]: zipInfo.state,
+    [`${prefix} Full Company MSA`]: msa,
+    [`${prefix} Company MSA`]: msa,
+  }));
+
+  setDirty(true);
+}
+
 
 // ---------- COMPONENT ----------
 export default function EditCompanyPage() {
@@ -236,6 +297,30 @@ export default function EditCompanyPage() {
     })();
   }, [rowId, router]);
 
+  useEffect(() => {
+    if (!data) return;
+
+    const zipFields = [
+      "Website Zip Code",
+      "LinkedIn Zip Code",
+      "PPP Zip Code",
+      "BBB Zip Code",
+      "Google Business Zip Code",
+      "SoS Principal Zip Code",
+      "SoS Agent Zip Code",
+    ];
+
+    zipFields.forEach((field) => {
+      const zip = getValue(data, field);
+      
+      if (isValidZip(zip)) {
+        const prefix = field.replace("Zip Code", "").trim();
+        autoFillZip(prefix, zip, setData, setDirty);
+      }
+    });
+  }, []); // <-- IMPORTANT: EMPTY DEPENDENCY (RUN ONLY ONCE)
+
+
   const title = useMemo(() => {
     return data?.["Account Name"] ? `Edit: ${data["Account Name"]}` : "Edit Company";
   }, [data?.["Account Name"]]);
@@ -243,6 +328,12 @@ export default function EditCompanyPage() {
   const onChangeField = (key: string, value: string) => {
     setData((prev) => (prev ? { ...prev, [key]: value } : prev));
     setDirty(true);
+
+    // ZIP auto-fill detection
+    if (key.toLowerCase().includes("zip code") && isValidZip(value)) {
+      const prefix = key.replace("Zip Code", "").trim();
+      autoFillZip(prefix, value, setData, setDirty);
+    }
   };
 
   const onSave = async () => {
