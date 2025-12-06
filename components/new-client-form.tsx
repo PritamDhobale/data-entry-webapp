@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 /** ---------------- ZIP Lookup + MSA Helpers ---------------- */
 const ZIP_CACHE: Record<string, { city: string; state: string; msa?: string }> = {};
@@ -543,96 +549,197 @@ export function NewClientForm() {
   };
 
   const handleSubmit = async () => {
-    setSaving(true);
-    try {
-      // ✅ Basic validation
-      if (!form.account_name && !form.website_company_name) {
-        alert("Please provide at least Account Name or Website Contact Name");
-        setSaving(false);
-        return;
-      }
-
-      // ✅ Define boolean columns exactly as in Supabase schema
-      const booleanFields = [
-        "website_could_not_access",
-        "linkedin_could_not_access",
-        "bbb_could_not_access",
-        "google_could_not_access",
-        "ppp_could_not_access",
-        "sos_could_not_access",
-      ];
-
-      // ✅ Normalize data before sending to API
-      const normalizedPayload = Object.fromEntries(
-        Object.entries(form).map(([key, value]) => {
-          const trimmed = typeof value === "string" ? value.trim() : value;
-
-          // Handle booleans
-          if (booleanFields.includes(key)) {
-            if (trimmed === "true" || trimmed === "1" || trimmed.toLowerCase() === "yes") return [key, true];
-            if (trimmed === "false" || trimmed === "0" || trimmed.toLowerCase() === "no") return [key, false];
-            return [key, null];
-          }
-
-          // Handle numbers (loan sizes, employees, etc.)
-          if (
-            key.endsWith("_num") ||
-            key.includes("loan") ||
-            key.includes("employees") ||
-            key.includes("year_founded") ||
-            key.includes("zip_code") ||
-            key.includes("jobs_retained")
-          ) {
-            const num = parseFloat(trimmed);
-            return [key, isNaN(num) ? null : num];
-          }
-
-          // Default string → null if empty
-          return [key, trimmed === "" ? null : trimmed];
-        })
-      );
-
-      // ✅ Add created timestamp
-      const payload = {
-        ...normalizedPayload,
-        created_at: new Date().toISOString(),
-      };
-
-      // ✅ API request
-      const res = await fetch("/api/clients/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || "Failed to add company");
-      }
-
-      const { client_id } = await res.json();
-
-      // ✅ Optional document uploads
-      if (client_id && documents.length) {
-        for (const file of documents) {
-          const fd = new FormData();
-          fd.append("client_id", String(client_id));
-          fd.append("documents", file);
-          await fetch("/api/files/upload", { method: "POST", body: fd });
-        }
-      }
-
-      // ✅ Reset form + close modal
-      setForm(initial);
-      setDocuments([]);
-      setOpen(false);
-    } catch (err: any) {
-      console.error("Create company failed:", err?.message || err);
-      alert(err?.message || "Create company failed");
-    } finally {
+  setSaving(true);
+  try {
+    // Validation
+    if (!form.account_name && !form.website_company_name) {
+      alert("Please provide at least Account Name or Website Contact Name");
       setSaving(false);
+      return;
     }
-  };
+
+    // Normalize form data
+    const booleanFields = [
+      "website_could_not_access",
+      "linkedin_could_not_access",
+      "bbb_could_not_access",
+      "google_could_not_access",
+      "ppp_could_not_access",
+      "sos_could_not_access",
+    ];
+
+    const normalizedPayload = Object.fromEntries(
+      Object.entries(form).map(([key, value]) => {
+        const trimmed = typeof value === "string" ? value.trim() : value;
+
+        if (booleanFields.includes(key)) {
+          if (["true", "1", "yes"].includes(trimmed?.toLowerCase())) return [key, true];
+          if (["false", "0", "no"].includes(trimmed?.toLowerCase())) return [key, false];
+          return [key, null];
+        }
+
+        if (
+          key.endsWith("_num") ||
+          key.includes("loan") ||
+          key.includes("employees") ||
+          key.includes("year_founded") ||
+          key.includes("jobs_retained")
+        ) {
+          const n = parseFloat(trimmed);
+          return [key, isNaN(n) ? null : n];
+        }
+
+        return [key, trimmed === "" ? null : trimmed];
+      })
+    );
+
+    // ⭐ Get logged-in user ID
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const createdBy = session?.user?.id;
+
+    if (!createdBy) {
+      alert("User not logged in — cannot create company");
+      setSaving(false);
+      return;
+    }
+
+    // ⭐ Final payload including created_by
+    const payload = {
+      ...normalizedPayload,
+      created_at: new Date().toISOString(),
+      created_by: createdBy,
+    };
+
+    // API call
+    const res = await fetch("/api/clients/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || "Failed to add company");
+    }
+
+    const { client_id } = await res.json();
+
+    // Upload documents
+    if (client_id && documents.length > 0) {
+      for (const file of documents) {
+        const fd = new FormData();
+        fd.append("client_id", String(client_id));
+        fd.append("documents", file);
+        await fetch("/api/files/upload", { method: "POST", body: fd });
+      }
+    }
+
+    setForm(initial);
+    setDocuments([]);
+    setOpen(false);
+  } catch (err: any) {
+    console.error("Create company failed:", err.message);
+    alert(err.message);
+  } finally {
+    setSaving(false);
+  }
+};
+
+
+  // const handleSubmit = async () => {
+  //   setSaving(true);
+  //   try {
+  //     // ✅ Basic validation
+  //     if (!form.account_name && !form.website_company_name) {
+  //       alert("Please provide at least Account Name or Website Contact Name");
+  //       setSaving(false);
+  //       return;
+  //     }
+
+  //     // ✅ Define boolean columns exactly as in Supabase schema
+  //     const booleanFields = [
+  //       "website_could_not_access",
+  //       "linkedin_could_not_access",
+  //       "bbb_could_not_access",
+  //       "google_could_not_access",
+  //       "ppp_could_not_access",
+  //       "sos_could_not_access",
+  //     ];
+
+  //     // ✅ Normalize data before sending to API
+  //     const normalizedPayload = Object.fromEntries(
+  //       Object.entries(form).map(([key, value]) => {
+  //         const trimmed = typeof value === "string" ? value.trim() : value;
+
+  //         // Handle booleans
+  //         if (booleanFields.includes(key)) {
+  //           if (trimmed === "true" || trimmed === "1" || trimmed.toLowerCase() === "yes") return [key, true];
+  //           if (trimmed === "false" || trimmed === "0" || trimmed.toLowerCase() === "no") return [key, false];
+  //           return [key, null];
+  //         }
+
+  //         // Handle numbers (loan sizes, employees, etc.)
+  //         if (
+  //           key.endsWith("_num") ||
+  //           key.includes("loan") ||
+  //           key.includes("employees") ||
+  //           key.includes("year_founded") ||
+  //           key.includes("zip_code") ||
+  //           key.includes("jobs_retained")
+  //         ) {
+  //           const num = parseFloat(trimmed);
+  //           return [key, isNaN(num) ? null : num];
+  //         }
+
+  //         // Default string → null if empty
+  //         return [key, trimmed === "" ? null : trimmed];
+  //       })
+  //     );
+
+  //     // ✅ Add created timestamp
+  //     const payload = {
+  //       ...normalizedPayload,
+  //       created_at: new Date().toISOString(),
+  //     };
+
+  //     // ✅ API request
+  //     const res = await fetch("/api/clients/add", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!res.ok) {
+  //       const msg = await res.text();
+  //       throw new Error(msg || "Failed to add company");
+  //     }
+
+  //     const { client_id } = await res.json();
+
+  //     // ✅ Optional document uploads
+  //     if (client_id && documents.length) {
+  //       for (const file of documents) {
+  //         const fd = new FormData();
+  //         fd.append("client_id", String(client_id));
+  //         fd.append("documents", file);
+  //         await fetch("/api/files/upload", { method: "POST", body: fd });
+  //       }
+  //     }
+
+  //     // ✅ Reset form + close modal
+  //     setForm(initial);
+  //     setDocuments([]);
+  //     setOpen(false);
+  //   } catch (err: any) {
+  //     console.error("Create company failed:", err?.message || err);
+  //     alert(err?.message || "Create company failed");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
 
   return (
